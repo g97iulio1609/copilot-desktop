@@ -106,3 +106,78 @@ impl ConfigManager {
         let _ = save_config(&config);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn test_default_config() {
+        let config = AppConfig::default();
+        assert_eq!(config.theme, "dark");
+        assert_eq!(config.font_size, 14);
+        assert_eq!(config.font_family, "SF Mono");
+        assert!(config.copilot_path.is_none());
+        assert!(config.default_model.is_none());
+        assert!(config.recent_projects.is_empty());
+        assert!(config.show_line_numbers);
+        assert!(config.auto_scroll);
+        assert!(config.send_on_enter);
+        assert!(!config.notification_sound);
+        assert_eq!(config.accent_color, "blue");
+    }
+
+    #[test]
+    fn test_config_serialize_deserialize() {
+        let config = AppConfig {
+            copilot_path: Some("/usr/bin/copilot".to_string()),
+            theme: "light".to_string(),
+            font_size: 16,
+            ..AppConfig::default()
+        };
+        let json = serde_json::to_string(&config).unwrap();
+        let deserialized: AppConfig = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.copilot_path, Some("/usr/bin/copilot".to_string()));
+        assert_eq!(deserialized.theme, "light");
+        assert_eq!(deserialized.font_size, 16);
+    }
+
+    #[test]
+    fn test_load_save_cycle_with_temp_file() {
+        let dir = std::env::temp_dir().join(format!("copilot-test-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("config.json");
+
+        let config = AppConfig {
+            theme: "light".to_string(),
+            font_size: 20,
+            ..AppConfig::default()
+        };
+        let data = serde_json::to_string_pretty(&config).unwrap();
+        let mut file = std::fs::File::create(&path).unwrap();
+        file.write_all(data.as_bytes()).unwrap();
+
+        let loaded: AppConfig =
+            serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap();
+        assert_eq!(loaded.theme, "light");
+        assert_eq!(loaded.font_size, 20);
+
+        // Cleanup
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn test_config_manager_get_update() {
+        let manager = ConfigManager {
+            config: Mutex::new(AppConfig::default()),
+        };
+        let config = manager.get_config();
+        assert_eq!(config.theme, "dark");
+
+        let mut updated = config;
+        updated.theme = "light".to_string();
+        *manager.config.lock().unwrap() = updated;
+        assert_eq!(manager.get_config().theme, "light");
+    }
+}

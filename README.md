@@ -9,9 +9,19 @@ A modern, Codex-like desktop UI for [GitHub Copilot CLI](https://github.com/gith
 
 ## Screenshots
 
-<!-- TODO: Add screenshots -->
 <p align="center">
-  <em>Screenshots coming soon</em>
+  <img src="docs/screenshots/login-screen.png" alt="Login Screen" width="720" />
+  <br/><em>Login Screen — Sign in with your GitHub account</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/project-picker.png" alt="Project Picker" width="720" />
+  <br/><em>Project Picker — Select a folder to start a session</em>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/main-chat-view.png" alt="Main Chat View" width="720" />
+  <br/><em>Main Chat View — Sidebar, model selector, mode switcher, and chat input</em>
 </p>
 
 ## Overview

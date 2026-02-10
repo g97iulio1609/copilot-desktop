@@ -45,7 +45,7 @@ export function InputArea({ value, onChange, onSubmit, isStreaming, modelName }:
   );
 
   return (
-    <div className="border-t border-zinc-800/50 p-4">
+    <div className="border-t border-white/[0.06] bg-white/[0.01] p-4">
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
         <div className="relative">
           <textarea
@@ -57,9 +57,10 @@ export function InputArea({ value, onChange, onSubmit, isStreaming, modelName }:
             placeholder={isStreaming ? 'Copilot is thinking...' : 'Ask Copilot anything... (@ to mention files)'}
             rows={1}
             className={cn(
-              'w-full resize-none rounded-xl bg-zinc-800/60 border border-zinc-700/50',
+              'w-full resize-none rounded-xl bg-white/[0.04] border border-white/[0.08]',
               'px-4 py-3 pr-12 text-sm text-zinc-200 placeholder-zinc-500',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent',
+              'focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20',
+              'focus:bg-white/[0.05]',
               'transition-all duration-200',
               isStreaming && 'opacity-60 cursor-not-allowed',
             )}
@@ -68,10 +69,10 @@ export function InputArea({ value, onChange, onSubmit, isStreaming, modelName }:
             type="submit"
             disabled={!value.trim() || isStreaming}
             className={cn(
-              'absolute right-3 top-3',
-              'p-1.5 rounded-lg transition-colors duration-200',
+              'absolute right-2.5 top-2.5',
+              'p-1.5 rounded-lg transition-all duration-200',
               value.trim() && !isStreaming
-                ? 'bg-blue-600 text-white hover:bg-blue-500'
+                ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-600/20'
                 : 'text-zinc-600',
             )}
           >
@@ -80,8 +81,8 @@ export function InputArea({ value, onChange, onSubmit, isStreaming, modelName }:
         </div>
         <div className="flex items-center justify-between mt-1.5 px-1">
           {modelName && (
-            <span className="text-[11px] text-zinc-600">
-              Model: {modelName}
+            <span className="text-[11px] text-zinc-500 font-mono">
+              {modelName}
             </span>
           )}
           <span className="text-[11px] text-zinc-600 ml-auto">

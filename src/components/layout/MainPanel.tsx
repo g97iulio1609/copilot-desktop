@@ -6,7 +6,7 @@ import { SessionTabs } from '@/components/session/SessionTabs';
 import { McpManager } from '@/components/mcp/McpManager';
 import { PluginMarketplace } from '@/components/plugins/PluginMarketplace';
 import { SettingsPanel } from '@/components/settings/SettingsPanel';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
+import { Panel, Group as PanelGroup, Separator as PanelResizeHandle } from 'react-resizable-panels';
 
 export function MainPanel() {
   const { currentView, inspectorOpen } = useSettingsStore();

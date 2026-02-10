@@ -20,19 +20,19 @@ export function CodeBlock({ code, language, showLineNumbers = false }: CodeBlock
   const lines = code.split('\n');
 
   return (
-    <div className="group relative rounded-lg bg-zinc-950 border border-zinc-800 overflow-hidden my-2">
+    <div className="group relative rounded-lg bg-[#0d1117] border border-white/[0.06] overflow-hidden my-3 shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-800/50">
-        <span className="text-[11px] text-zinc-500 font-mono">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-white/[0.02] border-b border-white/[0.06]">
+        <span className="text-[11px] text-zinc-400 font-mono tracking-wide">
           {language || 'text'}
         </span>
         <button
           onClick={handleCopy}
           className={cn(
-            'flex items-center gap-1 text-[11px] px-2 py-0.5 rounded transition-colors',
+            'flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md transition-all duration-150',
             copied
-              ? 'text-emerald-400'
-              : 'text-zinc-500 hover:text-zinc-300 opacity-0 group-hover:opacity-100'
+              ? 'text-emerald-400 bg-emerald-500/10'
+              : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04] opacity-0 group-hover:opacity-100'
           )}
         >
           {copied ? (
@@ -51,7 +51,7 @@ export function CodeBlock({ code, language, showLineNumbers = false }: CodeBlock
 
       {/* Code */}
       <div className="overflow-x-auto">
-        <pre className="p-3 text-sm leading-relaxed">
+        <pre className="p-4 text-[13px] leading-relaxed">
           <code className={language ? `hljs language-${language}` : undefined}>
             {showLineNumbers
               ? lines.map((line, i) => (

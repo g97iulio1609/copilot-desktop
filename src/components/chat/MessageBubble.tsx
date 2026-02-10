@@ -54,13 +54,13 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
 
       if (match) {
         return (
-          <div className="group relative rounded-lg bg-zinc-950 border border-zinc-800 overflow-hidden my-2">
-            <div className="flex items-center justify-between px-3 py-1.5 border-b border-zinc-800/50">
-              <span className="text-[11px] text-zinc-500 font-mono">{match[1]}</span>
+          <div className="group relative rounded-lg bg-[#0d1117] border border-white/[0.06] overflow-hidden my-3 shadow-sm">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-white/[0.02] border-b border-white/[0.06]">
+              <span className="text-[11px] text-zinc-400 font-mono tracking-wide">{match[1]}</span>
               <InlineCodeCopyButton code={codeString} />
             </div>
             <div className="overflow-x-auto">
-              <pre className="p-3 text-sm leading-relaxed">
+              <pre className="p-4 text-[13px] leading-relaxed">
                 <code className={className}>{children}</code>
               </pre>
             </div>
@@ -69,7 +69,7 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
       }
 
       return (
-        <code className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-200 text-[13px] font-mono">
+        <code className="px-1.5 py-0.5 rounded-md bg-white/[0.06] text-emerald-300 text-[13px] font-mono border border-white/[0.04]">
           {children}
         </code>
       );
@@ -89,13 +89,13 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
       {/* Avatar */}
       <div
         className={cn(
-          'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
+          'w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5',
           isUser
-            ? 'bg-blue-600/20 text-blue-400'
-            : 'bg-emerald-600/20 text-emerald-400',
+            ? 'bg-blue-500/15 text-blue-400 ring-1 ring-blue-500/20'
+            : 'bg-emerald-500/15 text-emerald-400 ring-1 ring-emerald-500/20',
         )}
       >
-        {isUser ? <User size={16} /> : <Bot size={16} />}
+        {isUser ? <User size={14} /> : <Bot size={14} />}
       </div>
 
       {/* Content */}
@@ -104,13 +104,13 @@ export function MessageBubble({ message, isStreaming = false }: MessageBubblePro
           className={cn(
             'rounded-xl px-4 py-3 text-sm leading-relaxed',
             isUser
-              ? 'bg-blue-600/15 border border-blue-500/20 text-zinc-200'
-              : 'bg-zinc-800/80 border border-zinc-700/30 text-zinc-300',
+              ? 'bg-blue-600/10 border border-blue-500/15 text-zinc-200'
+              : 'bg-white/[0.03] border border-white/[0.06] text-zinc-300',
             // Markdown prose styles
             !isUser && 'prose-sm prose-invert max-w-none',
-            !isUser && '[&_p]:my-1 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5',
-            !isUser && '[&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm',
-            !isUser && '[&_a]:text-blue-400 [&_a:hover]:underline',
+            !isUser && '[&_p]:my-1.5 [&_ul]:my-1.5 [&_ol]:my-1.5 [&_li]:my-0.5',
+            !isUser && '[&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_h1]:font-semibold [&_h2]:font-semibold',
+            !isUser && '[&_a]:text-emerald-400 [&_a:hover]:underline',
             !isUser && '[&_blockquote]:border-l-2 [&_blockquote]:border-zinc-600 [&_blockquote]:pl-3 [&_blockquote]:text-zinc-400',
             !isUser && '[&_table]:text-xs [&_th]:px-2 [&_th]:py-1 [&_td]:px-2 [&_td]:py-1',
           )}

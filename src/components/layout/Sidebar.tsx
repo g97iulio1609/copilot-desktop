@@ -45,7 +45,7 @@ export function Sidebar() {
         )}
         <button
           onClick={toggleSidebar}
-          className="p-1 rounded-md hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300 transition-colors"
+          className="p-1 rounded-md hover:bg-white/[0.06] text-zinc-500 hover:text-zinc-300 transition-colors duration-150"
         >
           <ChevronLeft
             size={16}
@@ -62,8 +62,9 @@ export function Sidebar() {
         <button
           className={cn(
             'flex items-center gap-2 w-full rounded-lg',
-            'bg-blue-600/20 hover:bg-blue-600/30 text-blue-400',
-            'transition-colors',
+            'bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400',
+            'border border-emerald-500/10 hover:border-emerald-500/20',
+            'transition-all duration-150',
             sidebarOpen ? 'px-3 py-2' : 'justify-center py-2'
           )}
         >
@@ -95,7 +96,7 @@ export function Sidebar() {
             <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider group-hover:text-zinc-400">
               Changed Files
             </span>
-            <span className="ml-auto text-xs bg-blue-600/20 text-blue-400 px-1.5 py-0.5 rounded-full font-medium">
+            <span className="ml-auto text-xs bg-emerald-600/15 text-emerald-400 px-1.5 py-0.5 rounded-full font-medium border border-emerald-500/10">
               {changedFiles.length}
             </span>
           </button>
@@ -110,13 +111,17 @@ export function Sidebar() {
             key={id}
             onClick={() => setCurrentView(id)}
             className={cn(
-              'flex items-center gap-3 w-full rounded-lg transition-colors',
+              'relative flex items-center gap-3 w-full rounded-lg transition-all duration-150',
               sidebarOpen ? 'px-3 py-2' : 'justify-center py-2',
               currentView === id
-                ? 'bg-zinc-800 text-zinc-200'
-                : 'text-zinc-500 hover:bg-zinc-800/50 hover:text-zinc-300'
+                ? 'bg-white/[0.06] text-zinc-200'
+                : 'text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300'
             )}
           >
+            {/* Active indicator */}
+            {currentView === id && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-emerald-500" />
+            )}
             <Icon size={18} />
             {sidebarOpen && <span className="text-sm">{label}</span>}
           </button>

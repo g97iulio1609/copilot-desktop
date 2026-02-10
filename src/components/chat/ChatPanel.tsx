@@ -61,18 +61,18 @@ export function ChatPanel() {
     <div className="flex-1 flex flex-col">
       {/* Session header */}
       {activeSession && (
-        <div className="flex items-center gap-3 px-6 py-2.5 border-b border-zinc-800/50">
-          <h2 className="text-sm font-medium text-zinc-300 truncate">
+        <div className="flex items-center gap-3 px-6 py-2.5 border-b border-white/[0.06]">
+          <h2 className="text-sm font-medium text-zinc-200 truncate tracking-tight">
             {activeSession.name}
           </h2>
           {activeSession.working_dir && (
-            <span className="flex items-center gap-1 text-[11px] text-zinc-600 truncate">
+            <span className="flex items-center gap-1 text-[11px] text-zinc-500 truncate font-mono">
               <FolderOpen size={11} />
               {activeSession.working_dir}
             </span>
           )}
           {activeSession.model && (
-            <span className="ml-auto text-[11px] text-zinc-600 bg-zinc-800/50 px-2 py-0.5 rounded">
+            <span className="ml-auto text-[11px] text-zinc-500 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-md font-mono">
               {activeSession.model}
             </span>
           )}
@@ -83,12 +83,12 @@ export function ChatPanel() {
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-6 py-4 space-y-4"
+        className="flex-1 overflow-y-auto px-6 py-6 space-y-6"
       >
         {messages.length === 0 && (
           <div className="flex-1 flex items-center justify-center h-full">
             <div className="text-center space-y-3">
-              <Sparkles size={48} className="mx-auto text-blue-500/50" />
+              <Sparkles size={48} className="mx-auto text-emerald-500/40" />
               <p className="text-zinc-500 text-lg">
                 Start a conversation with Copilot
               </p>
@@ -149,7 +149,7 @@ function WelcomeScreen() {
   return (
     <div className="flex-1 flex items-center justify-center">
       <div className="text-center space-y-6 max-w-lg">
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-violet-600 mx-auto flex items-center justify-center">
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 mx-auto flex items-center justify-center shadow-lg shadow-emerald-600/20">
           <Sparkles size={40} className="text-white" />
         </div>
         <h1 className="text-2xl font-bold text-zinc-200">
