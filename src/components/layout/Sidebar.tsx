@@ -31,7 +31,7 @@ export function Sidebar() {
   return (
     <div
       className={cn(
-        'flex flex-col h-full bg-zinc-950/90 border-r border-zinc-800/50',
+        'flex flex-col h-full glass-sidebar border-r border-white/[0.06]',
         'transition-all duration-200',
         sidebarOpen ? 'w-64' : 'w-14'
       )}

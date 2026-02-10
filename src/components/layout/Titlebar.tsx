@@ -10,7 +10,7 @@ export function Titlebar() {
       data-tauri-drag-region
       className={cn(
         'h-12 flex items-center justify-between px-4',
-        'bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-800/50',
+        'glass-titlebar border-b border-white/[0.06]',
         'select-none'
       )}
     >

@@ -4,6 +4,7 @@ import { MainPanel } from '@/components/layout/MainPanel';
 import { LoginScreen } from '@/components/auth/LoginScreen';
 import { ProjectPicker } from '@/components/layout/ProjectPicker';
 import { CommandPalette } from '@/components/layout/CommandPalette';
+import { UpdateChecker } from '@/components/settings/UpdateChecker';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useSessionStore } from '@/stores/sessionStore';
@@ -70,7 +71,8 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-zinc-900 text-zinc-200 rounded-xl overflow-hidden border border-zinc-800/30">
+    <div className="h-screen w-screen flex flex-col glass-panel text-zinc-200 rounded-xl overflow-hidden border border-white/[0.08]">
+      <UpdateChecker />
       <Titlebar />
       <div className="flex-1 flex overflow-hidden">
         <Sidebar />

@@ -19,12 +19,13 @@ tauri-build = { version = "2.5.4", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
-tauri = { version = "2.10.0", features = ["tray-icon"] }
+tauri = { version = "2.10.0", features = ["macos-private-api", "tray-icon", "image-png"] }
 tauri-plugin-log = "2"
 tauri-plugin-store = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-shell = "2"
 tauri-plugin-window-state = "2"
+tauri-plugin-updater = "2"
 tokio = { version = "1", features = ["full"] }
 portable-pty = "0.9"
 strip-ansi-escapes = "0.2"
@@ -33,3 +34,4 @@ thiserror = "2"
 which = "7"
 notify = "8"
 dirs = "5"
+window-vibrancy = "0.5"

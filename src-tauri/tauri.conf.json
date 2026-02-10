@@ -27,7 +27,8 @@
     ],
     "security": {
       "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
-    }
+    },
+    "macOSPrivateApi": true
   },
   "bundle": {
     "active": true,
@@ -43,5 +44,10 @@
       "minimumSystemVersion": "10.15"
     }
   },
-  "plugins": {}
+  "plugins": {
+    "updater": {
+      "endpoints": ["https://github.com/g97iulio1609/copilot-desktop/releases/latest/download/latest.json"],
+      "pubkey": ""
+    }
+  }
 }

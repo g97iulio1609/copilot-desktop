@@ -2,9 +2,17 @@
 
 A modern, Codex-like desktop UI for [GitHub Copilot CLI](https://github.com/github/copilot-cli).
 
+[![Latest Release](https://img.shields.io/github/v/release/g97iulio1609/copilot-desktop?label=download&sort=semver)](https://github.com/g97iulio1609/copilot-desktop/releases/latest)
 ![License](https://img.shields.io/badge/license-GPL--3.0-blue)
 ![Platform](https://img.shields.io/badge/platform-macOS%20|%20Linux%20|%20Windows-lightgrey)
 ![Built with](https://img.shields.io/badge/built%20with-Tauri%202.1%20%2B%20React%2019-orange)
+
+## Screenshots
+
+<!-- TODO: Add screenshots -->
+<p align="center">
+  <em>Screenshots coming soon</em>
+</p>
 
 ## Overview
 
@@ -24,12 +32,25 @@ Copilot Desktop brings the power of GitHub Copilot CLI into a beautiful native d
 - 📊 **Usage Metrics** — Token usage and premium request tracking
 - 🗂️ **Sessions** — Multi-session support with history
 
-## Prerequisites
+## Installation
 
-- [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed
+### Download (Recommended)
+
+Download the latest `.dmg` from the [Releases](https://github.com/g97iulio1609/copilot-desktop/releases/latest) page:
+
+| Platform | Architecture | Download |
+|----------|-------------|----------|
+| macOS | Apple Silicon (M1+) | `Copilot Desktop_x.x.x_aarch64.dmg` |
+| macOS | Intel | `Copilot Desktop_x.x.x_x64.dmg` |
+
+Open the `.dmg`, drag **Copilot Desktop** to your Applications folder, and launch.
+
+### Prerequisites
+
+- [GitHub Copilot CLI](https://github.com/github/copilot-cli) installed and on your `PATH`
 - Active [Copilot subscription](https://github.com/features/copilot/plans)
 
-## Development
+## Build from Source
 
 ### Requirements
 
@@ -43,14 +64,21 @@ Copilot Desktop brings the power of GitHub Copilot CLI into a beautiful native d
 git clone https://github.com/g97iulio1609/copilot-desktop.git
 cd copilot-desktop
 pnpm install
+```
+
+### Development
+
+```bash
 pnpm tauri dev
 ```
 
-### Build
+### Production Build
 
 ```bash
 pnpm tauri build
 ```
+
+The built `.dmg` will be in `src-tauri/target/release/bundle/dmg/`.
 
 ## Architecture
 
