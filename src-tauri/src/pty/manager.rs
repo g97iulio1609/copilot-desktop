@@ -1,15 +1,19 @@
-use portable_pty::{CommandBuilder, NativePtySystem, PtySize, PtySystem};
+use portable_pty::{CommandBuilder, MasterPty, NativePtySystem, PtySize, PtySystem};
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader, Write};
+use std::io::{Read, Write};
 use std::sync::{Arc, Mutex};
-use std::thread;
 use tauri::{AppHandle, Emitter};
+use tokio::sync::mpsc;
 
+use super::parser::AnsiParser;
 use crate::types::{AppError, PtyEvent};
 
 struct PtySession {
     writer: Box<dyn Write + Send>,
-    _child: Box<dyn portable_pty::Child + Send + Sync>,
+    master: Box<dyn MasterPty + Send>,
+    child: Box<dyn portable_pty::Child + Send + Sync>,
+    /// Sender to signal the reader task to stop
+    _cancel_tx: mpsc::Sender<()>,
 }
 
 pub struct PtyManager {
@@ -75,27 +79,105 @@ impl PtyManager {
             .take_writer()
             .map_err(|e| AppError::PtyError(e.to_string()))?;
 
+        // Channel for raw PTY data; reader thread sends chunks to async task
+        let (data_tx, mut data_rx) = mpsc::channel::<Vec<u8>>(256);
+        // Cancel channel to signal shutdown
+        let (cancel_tx, mut cancel_rx) = mpsc::channel::<()>(1);
+
         let sid = session_id.to_string();
-        thread::spawn(move || {
-            let buf_reader = BufReader::new(reader);
-            for line in buf_reader.lines() {
-                match line {
-                    Ok(text) => {
-                        let clean = strip_ansi_escapes::strip_str(&text);
-                        let _ = app_handle.emit(
-                            &format!("pty-output-{}", sid),
-                            PtyEvent::Output(clean),
-                        );
+
+        // Blocking reader thread: reads raw bytes from PTY and sends via channel
+        std::thread::spawn({
+            let data_tx = data_tx.clone();
+            move || {
+                let mut reader = reader;
+                let mut buf = [0u8; 4096];
+                loop {
+                    match reader.read(&mut buf) {
+                        Ok(0) => break,
+                        Ok(n) => {
+                            if data_tx.blocking_send(buf[..n].to_vec()).is_err() {
+                                break;
+                            }
+                        }
+                        Err(_) => break,
                     }
-                    Err(_) => break,
+                }
+                // Signal EOF
+                drop(data_tx);
+            }
+        });
+
+        // Async task: receives raw data, parses, and emits structured events
+        let sid_clone = sid.clone();
+        let child_sessions = self.sessions.clone();
+        tokio::spawn(async move {
+            let mut parser = AnsiParser::new();
+            let event_name = format!("pty-output-{}", sid_clone);
+
+            loop {
+                tokio::select! {
+                    chunk = data_rx.recv() => {
+                        match chunk {
+                            Some(bytes) => {
+                                let text = String::from_utf8_lossy(&bytes);
+                                let parsed_events = parser.feed(&text);
+                                for parsed in parsed_events {
+                                    let _ = app_handle.emit(
+                                        &event_name,
+                                        PtyEvent::Parsed(parsed),
+                                    );
+                                }
+                            }
+                            None => {
+                                // Reader closed — flush remaining buffered content
+                                let remaining = parser.flush();
+                                for parsed in remaining {
+                                    let _ = app_handle.emit(
+                                        &event_name,
+                                        PtyEvent::Parsed(parsed),
+                                    );
+                                }
+
+                                // Detect exit code from child process
+                                let exit_code = {
+                                    let mut sessions = child_sessions.lock().unwrap_or_else(|e| e.into_inner());
+                                    if let Some(session) = sessions.get_mut(&sid_clone) {
+                                        session.child.try_wait()
+                                            .ok()
+                                            .flatten()
+                                            .map(|status| status.exit_code() as i32)
+                                            .unwrap_or(0)
+                                    } else {
+                                        0
+                                    }
+                                };
+
+                                let _ = app_handle.emit(&event_name, PtyEvent::Exit(exit_code));
+                                break;
+                            }
+                        }
+                    }
+                    _ = cancel_rx.recv() => {
+                        let remaining = parser.flush();
+                        let event_name = format!("pty-output-{}", sid_clone);
+                        for parsed in remaining {
+                            let _ = app_handle.emit(
+                                &event_name,
+                                PtyEvent::Parsed(parsed),
+                            );
+                        }
+                        break;
+                    }
                 }
             }
-            let _ = app_handle.emit(&format!("pty-output-{}", sid), PtyEvent::Exit(0));
         });
 
         let session = PtySession {
             writer,
-            _child: child,
+            master: pair.master,
+            child,
+            _cancel_tx: cancel_tx,
         };
 
         self.sessions
@@ -128,12 +210,39 @@ impl PtyManager {
         Ok(())
     }
 
+    pub fn resize_pty(
+        &self,
+        session_id: &str,
+        rows: u16,
+        cols: u16,
+    ) -> Result<(), AppError> {
+        let sessions = self.sessions.lock().unwrap_or_else(|e| e.into_inner());
+        let session = sessions
+            .get(session_id)
+            .ok_or_else(|| AppError::SessionNotFound(session_id.to_string()))?;
+
+        session
+            .master
+            .resize(PtySize {
+                rows,
+                cols,
+                pixel_width: 0,
+                pixel_height: 0,
+            })
+            .map_err(|e| AppError::PtyError(e.to_string()))?;
+
+        Ok(())
+    }
+
     pub fn kill_session(&self, session_id: &str) -> Result<(), AppError> {
-        self.sessions
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
+        let mut sessions = self.sessions.lock().unwrap_or_else(|e| e.into_inner());
+        let mut session = sessions
             .remove(session_id)
             .ok_or_else(|| AppError::SessionNotFound(session_id.to_string()))?;
+
+        // Attempt graceful kill
+        let _ = session.child.kill();
+
         Ok(())
     }
 }

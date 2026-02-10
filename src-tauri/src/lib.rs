@@ -22,6 +22,7 @@ pub fn run() {
             commands::check_copilot_status,
             commands::create_session,
             commands::send_message,
+            commands::resize_terminal,
             commands::list_sessions,
             commands::close_session,
             commands::get_config,

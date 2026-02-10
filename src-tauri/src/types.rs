@@ -62,6 +62,19 @@ pub struct CopilotStatus {
 #[serde(tag = "type", content = "data")]
 pub enum PtyEvent {
     Output(String),
+    Parsed(ParsedOutput),
     Error(String),
     Exit(i32),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type", content = "data")]
+pub enum ParsedOutput {
+    Text(String),
+    CodeBlock { language: Option<String>, code: String },
+    ToolExecution { tool: String, status: String },
+    FileChange { path: String, action: String },
+    Thinking(String),
+    Error(String),
+    RawLine(String),
 }
