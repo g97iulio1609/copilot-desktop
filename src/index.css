@@ -37,7 +37,7 @@ body,
 }
 
 body {
-  background: transparent;
+  background: var(--bg-primary);
 }
 
 /* ── Typography ─────────────────────────────────────────── */

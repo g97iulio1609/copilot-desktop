@@ -71,7 +71,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col glass-panel text-zinc-200 rounded-xl overflow-hidden border border-white/[0.08]">
+    <div className="h-screen w-screen flex flex-col bg-[var(--bg-primary)] text-zinc-200 overflow-hidden">
       <UpdateChecker />
       <Titlebar />
       <div className="flex-1 flex overflow-hidden">

@@ -123,7 +123,7 @@ impl PtyManager {
         // Async task: receives raw data, parses, and emits structured events
         let sid_clone = sid.clone();
         let child_sessions = self.sessions.clone();
-        tokio::spawn(async move {
+        tauri::async_runtime::spawn(async move {
             let mut parser = AnsiParser::new();
             let event_name = format!("pty-output-{}", sid_clone);
 
