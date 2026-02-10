@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { Send } from 'lucide-react';
+import { ArrowUp, Plus } from 'lucide-react';
 
 interface InputAreaProps {
   value: string;
@@ -17,7 +17,6 @@ const PADDING = 24;
 export function InputArea({ value, onChange, onSubmit, isStreaming, modelName }: InputAreaProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-resize textarea
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
@@ -45,50 +44,56 @@ export function InputArea({ value, onChange, onSubmit, isStreaming, modelName }:
   );
 
   return (
-    <div className="border-t border-white/[0.06] bg-white/[0.01] p-4">
+    <div className="p-4">
       <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-        <div className="relative">
+        <div className="relative rounded-2xl bg-[#2a2a2a] border border-[#3a3a3a]">
+          {/* + button on left */}
+          <button
+            type="button"
+            className="absolute left-3 top-3 p-1 rounded-lg text-neutral-500 hover:text-neutral-300 transition-colors"
+          >
+            <Plus size={18} />
+          </button>
+
           <textarea
             ref={textareaRef}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isStreaming}
-            placeholder={isStreaming ? 'Copilot is thinking...' : 'Ask Copilot anything... (@ to mention files)'}
+            placeholder={isStreaming ? 'Thinking...' : 'Ask anything'}
             rows={1}
             className={cn(
-              'w-full resize-none rounded-xl bg-white/[0.04] border border-white/[0.08]',
-              'px-4 py-3 pr-12 text-sm text-zinc-200 placeholder-zinc-500',
-              'focus:outline-none focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20',
-              'focus:bg-white/[0.05]',
-              'transition-all duration-200',
+              'w-full resize-none bg-transparent',
+              'pl-11 pr-12 py-3 text-sm text-neutral-200 placeholder-neutral-500',
+              'focus:outline-none',
+              'transition-colors',
               isStreaming && 'opacity-60 cursor-not-allowed',
             )}
           />
+
+          {/* Send button on right */}
           <button
             type="submit"
             disabled={!value.trim() || isStreaming}
             className={cn(
-              'absolute right-2.5 top-2.5',
-              'p-1.5 rounded-lg transition-all duration-200',
+              'absolute right-3 top-3',
+              'p-1 rounded-full transition-all',
               value.trim() && !isStreaming
-                ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-600/20'
-                : 'text-zinc-600',
+                ? 'bg-white text-black hover:bg-neutral-200'
+                : 'text-neutral-600',
             )}
           >
-            <Send size={16} />
+            <ArrowUp size={16} />
           </button>
         </div>
-        <div className="flex items-center justify-between mt-1.5 px-1">
-          {modelName && (
-            <span className="text-[11px] text-zinc-500 font-mono">
+        {modelName && (
+          <div className="flex justify-end mt-1.5 px-1">
+            <span className="text-[11px] text-neutral-600 font-mono">
               {modelName}
             </span>
-          )}
-          <span className="text-[11px] text-zinc-600 ml-auto">
-            Shift+Enter for newline · Enter to send
-          </span>
-        </div>
+          </div>
+        )}
       </form>
     </div>
   );

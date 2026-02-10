@@ -3,18 +3,35 @@ import { open } from '@tauri-apps/plugin-dialog';
 import { cn } from '@/lib/utils';
 import { tauriApi } from '@/lib/tauri';
 import { useSessionStore } from '@/stores/sessionStore';
+import type { CopilotSession } from '@/types';
 
 interface ProjectPickerProps {
   onProjectOpened?: () => void;
 }
 
+function timeAgo(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diff = now - then;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}
+
 export function ProjectPicker({ onProjectOpened }: ProjectPickerProps) {
   const [recentProjects, setRecentProjects] = useState<string[]>([]);
+  const [copilotSessions, setCopilotSessions] = useState<CopilotSession[]>([]);
   const [isOpening, setIsOpening] = useState(false);
   const { addSession } = useSessionStore();
 
   useEffect(() => {
     tauriApi.getRecentProjects().then(setRecentProjects).catch(console.error);
+    tauriApi.listCopilotSessions().then(setCopilotSessions).catch(console.error);
   }, []);
 
   const openProject = useCallback(
@@ -35,6 +52,22 @@ export function ProjectPicker({ onProjectOpened }: ProjectPickerProps) {
     [addSession, onProjectOpened],
   );
 
+  const resumeSession = useCallback(
+    async (sessionId: string) => {
+      setIsOpening(true);
+      try {
+        const session = await tauriApi.resumeSession(sessionId);
+        addSession(session);
+        onProjectOpened?.();
+      } catch (err) {
+        console.error('Failed to resume session:', err);
+      } finally {
+        setIsOpening(false);
+      }
+    },
+    [addSession, onProjectOpened],
+  );
+
   const handleSelectFolder = useCallback(async () => {
     try {
       const selected = await open({ directory: true, multiple: false });
@@ -47,11 +80,11 @@ export function ProjectPicker({ onProjectOpened }: ProjectPickerProps) {
   }, [openProject]);
 
   return (
-    <div className="h-screen w-screen flex items-center justify-center bg-zinc-900">
+    <div className="h-screen w-screen flex items-center justify-center">
       <div
         className={cn(
           'flex flex-col gap-6 p-8 rounded-2xl',
-          'bg-zinc-900/80 backdrop-blur-xl border border-zinc-700/40',
+          'glass-panel border border-zinc-700/40',
           'shadow-2xl shadow-black/40',
           'max-w-lg w-full mx-4',
         )}
@@ -62,7 +95,7 @@ export function ProjectPicker({ onProjectOpened }: ProjectPickerProps) {
             Open a Project
           </h2>
           <p className="text-sm text-zinc-400">
-            Select a folder to start a Copilot session
+            Select a folder or resume a previous session
           </p>
         </div>
 
@@ -96,13 +129,52 @@ export function ProjectPicker({ onProjectOpened }: ProjectPickerProps) {
           </span>
         </button>
 
-        {/* Recent Projects */}
+        {/* Recent Copilot Sessions */}
+        {copilotSessions.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <h3 className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
+              Recent Sessions
+            </h3>
+            <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
+              {copilotSessions.map((cs) => {
+                const parts = cs.cwd.replace(/\\/g, '/').split('/');
+                const folderName = parts[parts.length - 1] || cs.cwd;
+                return (
+                  <button
+                    key={cs.id}
+                    onClick={() => resumeSession(cs.id)}
+                    disabled={isOpening}
+                    className={cn(
+                      'flex items-start gap-3 px-4 py-3 rounded-lg text-left',
+                      'hover:bg-zinc-800/60 transition-colors duration-150',
+                      'disabled:opacity-50 disabled:cursor-not-allowed',
+                    )}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-zinc-200 block truncate">
+                        {cs.summary || folderName}
+                      </span>
+                      <span className="text-xs text-zinc-500 truncate block">
+                        {cs.cwd}
+                      </span>
+                    </div>
+                    <span className="text-xs text-zinc-600 whitespace-nowrap mt-0.5">
+                      {timeAgo(cs.updated_at)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Projects fallback */}
         {recentProjects.length > 0 && (
           <div className="flex flex-col gap-2">
             <h3 className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
               Recent Projects
             </h3>
-            <div className="flex flex-col gap-1 max-h-64 overflow-y-auto">
+            <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
               {recentProjects.map((project) => {
                 const parts = project.replace(/\\/g, '/').split('/');
                 const folderName = parts[parts.length - 1] || project;

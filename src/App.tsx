@@ -1,4 +1,3 @@
-import { Titlebar } from '@/components/layout/Titlebar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { LoginScreen } from '@/components/auth/LoginScreen';
@@ -51,33 +50,27 @@ export default function App() {
     checkAuth();
   }, [setCopilotStatus, checkAuth]);
 
-  // Show loading while checking auth
   if (isCheckingAuth || !status) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-zinc-900">
-        <div className="animate-spin h-8 w-8 border-2 border-zinc-600 border-t-zinc-200 rounded-full" />
+      <div className="h-screen w-screen flex items-center justify-center bg-[#0e0e0e]">
+        <div className="animate-spin h-8 w-8 border-2 border-neutral-700 border-t-neutral-300 rounded-full" />
       </div>
     );
   }
 
-  // Show login screen if not authenticated
   if (!status.authenticated) {
     return <LoginScreen />;
   }
 
-  // Show project picker if no active session
   if (!activeSessionId) {
     return <ProjectPicker />;
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[var(--bg-primary)] text-zinc-200 overflow-hidden">
+    <div className="h-screen w-screen flex flex-row bg-[#0e0e0e] text-neutral-200 overflow-hidden">
       <UpdateChecker />
-      <Titlebar />
-      <div className="flex-1 flex overflow-hidden">
-        <Sidebar />
-        <MainPanel />
-      </div>
+      <Sidebar />
+      <MainPanel />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );

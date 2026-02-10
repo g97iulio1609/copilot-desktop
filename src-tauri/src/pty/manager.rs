@@ -47,6 +47,7 @@ impl PtyManager {
         working_dir: &str,
         model: Option<&str>,
         mode: Option<&str>,
+        resume_session_id: Option<&str>,
         app_handle: AppHandle,
     ) -> Result<(), AppError> {
         let copilot_path = self
@@ -65,8 +66,15 @@ impl PtyManager {
 
         let mut cmd = CommandBuilder::new(&copilot_path);
         cmd.cwd(working_dir);
-        cmd.arg("--add-dir");
-        cmd.arg(working_dir);
+
+        if let Some(rid) = resume_session_id {
+            cmd.arg("--resume");
+            cmd.arg(rid);
+        } else {
+            cmd.arg("--add-dir");
+            cmd.arg(working_dir);
+        }
+
         if let Some(m) = model {
             cmd.arg("--model");
             cmd.arg(m);

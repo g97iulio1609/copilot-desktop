@@ -11,6 +11,7 @@ interface ChatState {
   appendToLastMessage: (sessionId: string, content: string) => void;
   setStreaming: (streaming: boolean) => void;
   setInputValue: (value: string) => void;
+  setSessionMessages: (sessionId: string, messages: CopilotMessage[]) => void;
   clearSessionMessages: (sessionId: string) => void;
 }
 
@@ -45,6 +46,12 @@ export const useChatStore = create<ChatState>((set, get) => ({
 
   setStreaming: (isStreaming) => set({ isStreaming }),
   setInputValue: (inputValue) => set({ inputValue }),
+  setSessionMessages: (sessionId, messages) =>
+    set((state) => {
+      const map = new Map(state.messagesPerSession);
+      map.set(sessionId, messages);
+      return { messagesPerSession: map };
+    }),
   clearSessionMessages: (sessionId) =>
     set((state) => {
       const map = new Map(state.messagesPerSession);

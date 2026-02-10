@@ -32,7 +32,7 @@ pub struct McpManager {
 impl McpManager {
     pub fn new() -> Self {
         let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("."));
-        let config_path = home.join(".copilot").join("mcp.json");
+        let config_path = home.join(".copilot").join("mcp-config.json");
         Self {
             config_path: Mutex::new(config_path),
         }

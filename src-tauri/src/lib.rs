@@ -114,6 +114,7 @@ pub fn run() {
             commands::set_model,
             commands::set_mode,
             commands::list_available_models,
+            commands::get_default_model,
             commands::send_slash_command,
             commands::get_session,
             commands::list_installed_plugins,
@@ -124,6 +125,11 @@ pub fn run() {
             commands::update_config,
             commands::get_usage_metrics,
             commands::clear_session_history,
+            commands::trigger_login,
+            commands::list_copilot_sessions,
+            commands::get_copilot_config,
+            commands::resume_session,
+            commands::get_session_events,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

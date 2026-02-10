@@ -180,3 +180,14 @@ pub struct KeyboardShortcut {
     pub description: String,
     pub category: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CopilotSession {
+    pub id: String,
+    pub cwd: String,
+    pub summary: Option<String>,
+    pub repository: Option<String>,
+    pub branch: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+}

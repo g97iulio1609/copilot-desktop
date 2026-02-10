@@ -1,131 +1,223 @@
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useSessionStore } from '@/stores/sessionStore';
+import { useChatStore } from '@/stores/chatStore';
 import { useFileStore } from '@/stores/fileStore';
-import { FileTree } from '@/components/files/FileTree';
 import { SessionList } from '@/components/session/SessionList';
+import { tauriApi } from '@/lib/tauri';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   MessageSquare,
-  Plus,
+  Pencil,
   Settings,
-  Puzzle,
-  Server,
-  ChevronLeft,
-  GitCompare,
+  Folder,
+  ChevronRight,
 } from 'lucide-react';
-import type { AppView } from '@/types';
+import type { CopilotSession } from '@/types';
 
-const navItems: { id: AppView; icon: typeof MessageSquare; label: string }[] = [
-  { id: 'chat', icon: MessageSquare, label: 'Chat' },
-  { id: 'mcp', icon: Server, label: 'MCP' },
-  { id: 'plugins', icon: Puzzle, label: 'Plugins' },
-  { id: 'settings', icon: Settings, label: 'Settings' },
-];
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+function folderName(cwd: string): string {
+  return cwd.replace(/\\/g, '/').split('/').filter(Boolean).pop() || cwd;
+}
+
+interface GroupedSessions {
+  folder: string;
+  cwd: string;
+  sessions: CopilotSession[];
+}
 
 export function Sidebar() {
-  const { currentView, setCurrentView, sidebarOpen, toggleSidebar, toggleInspector } =
-    useSettingsStore();
-  const { sessions, activeSessionId, setActiveSession } = useSessionStore();
+  const { setCurrentView } = useSettingsStore();
+  const { sessions, activeSessionId, setActiveSession, addSession } = useSessionStore();
+  const { setSessionMessages } = useChatStore();
   const { changedFiles } = useFileStore();
+  const [copilotSessions, setCopilotSessions] = useState<CopilotSession[]>([]);
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    tauriApi.listCopilotSessions().then(setCopilotSessions).catch(console.error);
+  }, []);
+
+  const grouped = useMemo<GroupedSessions[]>(() => {
+    const map = new Map<string, CopilotSession[]>();
+    for (const cs of copilotSessions) {
+      const key = cs.cwd;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(cs);
+    }
+    return Array.from(map.entries())
+      .map(([cwd, sessions]) => ({ folder: folderName(cwd), cwd, sessions }))
+      .sort((a, b) => {
+        const aTime = a.sessions[0]?.updated_at ?? '';
+        const bTime = b.sessions[0]?.updated_at ?? '';
+        return bTime.localeCompare(aTime);
+      });
+  }, [copilotSessions]);
+
+  const toggleFolder = useCallback((cwd: string) => {
+    setExpandedFolders((prev) => {
+      const next = new Set(prev);
+      if (next.has(cwd)) next.delete(cwd);
+      else next.add(cwd);
+      return next;
+    });
+  }, []);
+
+  const loadSessionHistory = useCallback(async (cs: CopilotSession) => {
+    const sessionId = crypto.randomUUID();
+    const name = cs.summary || folderName(cs.cwd);
+    addSession({
+      id: sessionId,
+      name,
+      working_dir: cs.cwd,
+      model: null,
+      mode: 'suggest' as const,
+      created_at: new Date(cs.created_at).getTime(),
+      is_active: true,
+    });
+    setActiveSession(sessionId);
+    try {
+      const events = await tauriApi.getSessionEvents(cs.id);
+      if (events.length > 0) {
+        const messages = events
+          .filter((e) => e.content.trim().length > 0)
+          .map((e) => ({
+            id: e.id,
+            role: e.role as 'user' | 'assistant',
+            content: e.content,
+            timestamp: new Date(e.timestamp).getTime(),
+          }));
+        setSessionMessages(sessionId, messages);
+      }
+    } catch {
+      // History loading is best-effort
+    }
+  }, [addSession, setActiveSession, setSessionMessages]);
+
+  const handleNewSession = useCallback(() => {
+    addSession({
+      id: crypto.randomUUID(),
+      name: 'New Session',
+      working_dir: '~',
+      model: null,
+      mode: 'suggest' as const,
+      created_at: Date.now(),
+      is_active: true,
+    });
+  }, [addSession]);
+
+  const handleOpenSettings = useCallback(() => {
+    setCurrentView('settings');
+  }, [setCurrentView]);
 
   return (
-    <div
-      className={cn(
-        'flex flex-col h-full glass-sidebar border-r border-white/[0.06]',
-        'transition-all duration-200',
-        sidebarOpen ? 'w-64' : 'w-14'
-      )}
-    >
-      {/* Collapse toggle */}
-      <div className="flex items-center justify-between p-3">
-        {sidebarOpen && (
-          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-            Navigation
-          </span>
-        )}
+    <div className="flex flex-col h-full w-[280px] shrink-0 bg-[#1a1a1a] border-r border-white/[0.06]">
+      {/* Drag region for macOS traffic lights */}
+      <div data-tauri-drag-region className="h-[38px] shrink-0" />
+
+      {/* New thread button */}
+      <div className="px-3 mb-1">
         <button
-          onClick={toggleSidebar}
-          className="p-1 rounded-md hover:bg-white/[0.06] text-zinc-500 hover:text-zinc-300 transition-colors duration-150"
+          onClick={handleNewSession}
+          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm font-medium text-neutral-200 hover:bg-white/[0.06] transition-colors"
         >
-          <ChevronLeft
-            size={16}
-            className={cn(
-              'transition-transform',
-              !sidebarOpen && 'rotate-180'
-            )}
-          />
+          <Pencil size={15} className="text-neutral-400" />
+          New thread
         </button>
       </div>
 
-      {/* New session button */}
-      <div className="px-2 mb-2">
+      {/* Settings */}
+      <div className="px-3 mb-2">
         <button
-          className={cn(
-            'flex items-center gap-2 w-full rounded-lg',
-            'bg-emerald-600/15 hover:bg-emerald-600/25 text-emerald-400',
-            'border border-emerald-500/10 hover:border-emerald-500/20',
-            'transition-all duration-150',
-            sidebarOpen ? 'px-3 py-2' : 'justify-center py-2'
-          )}
+          onClick={handleOpenSettings}
+          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-sm text-neutral-400 hover:text-neutral-200 hover:bg-white/[0.06] transition-colors"
         >
-          <Plus size={16} />
-          {sidebarOpen && <span className="text-sm font-medium">New Session</span>}
+          <Settings size={15} />
+          Settings
         </button>
       </div>
 
-      {/* Sessions list */}
-      {sidebarOpen && (
-        <div className="px-2 mb-4 overflow-y-auto">
-          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-2">
-            Sessions
-          </span>
-          <div className="mt-1">
-            <SessionList />
-          </div>
+      {/* Divider */}
+      <div className="mx-3 border-t border-white/[0.06] mb-2" />
+
+      {/* Active sessions */}
+      {sessions.length > 0 && (
+        <div className="px-3 mb-2">
+          <SessionList />
         </div>
       )}
 
-      {/* Files section */}
-      {sidebarOpen && changedFiles.length > 0 && (
-        <div className="px-2 mb-4">
-          <button
-            onClick={toggleInspector}
-            className="flex items-center gap-1.5 px-2 py-1 mb-1 w-full text-left rounded-md hover:bg-zinc-800/50 transition-colors group"
-          >
-            <GitCompare size={14} className="text-zinc-500 group-hover:text-zinc-400" />
-            <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider group-hover:text-zinc-400">
-              Changed Files
-            </span>
-            <span className="ml-auto text-xs bg-emerald-600/15 text-emerald-400 px-1.5 py-0.5 rounded-full font-medium border border-emerald-500/10">
-              {changedFiles.length}
-            </span>
-          </button>
-          <FileTree />
-        </div>
-      )}
+      {/* Threads section */}
+      <div className="px-3 mb-1">
+        <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider px-3">
+          Threads
+        </span>
+      </div>
 
-      {/* Navigation */}
-      <div className="mt-auto px-2 pb-3 space-y-0.5">
-        {navItems.map(({ id, icon: Icon, label }) => (
-          <button
-            key={id}
-            onClick={() => setCurrentView(id)}
-            className={cn(
-              'relative flex items-center gap-3 w-full rounded-lg transition-all duration-150',
-              sidebarOpen ? 'px-3 py-2' : 'justify-center py-2',
-              currentView === id
-                ? 'bg-white/[0.06] text-zinc-200'
-                : 'text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-300'
-            )}
-          >
-            {/* Active indicator */}
-            {currentView === id && (
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full bg-emerald-500" />
-            )}
-            <Icon size={18} />
-            {sidebarOpen && <span className="text-sm">{label}</span>}
-          </button>
-        ))}
+      {/* Scrollable session list grouped by folder */}
+      <div className="flex-1 overflow-y-auto min-h-0 px-3">
+        <div className="space-y-0.5">
+          {grouped.map((group) => {
+            const isExpanded = expandedFolders.has(group.cwd);
+            return (
+              <div key={group.cwd}>
+                <button
+                  onClick={() => toggleFolder(group.cwd)}
+                  className="flex items-center gap-1.5 w-full px-3 py-1.5 rounded-lg text-left hover:bg-white/[0.06] text-neutral-400 hover:text-neutral-200 transition-colors"
+                >
+                  <ChevronRight
+                    size={12}
+                    className={cn('shrink-0 text-neutral-600 transition-transform', isExpanded && 'rotate-90')}
+                  />
+                  <Folder size={14} className="shrink-0 text-neutral-500" />
+                  <span className="text-sm truncate flex-1">{group.folder}</span>
+                  <span className="text-[10px] text-neutral-600">{group.sessions.length}</span>
+                </button>
+                {isExpanded && (
+                  <div className="ml-5 space-y-0.5 mt-0.5">
+                    {group.sessions.map((cs) => {
+                      const isActive = cs.id === activeSessionId;
+                      return (
+                        <button
+                          key={cs.id}
+                          onClick={() => loadSessionHistory(cs)}
+                          className={cn(
+                            'flex items-center gap-2 w-full px-3 py-1.5 rounded-lg text-left transition-colors',
+                            isActive
+                              ? 'bg-white/[0.06] text-white'
+                              : 'text-neutral-500 hover:text-neutral-300 hover:bg-white/[0.04]'
+                          )}
+                        >
+                          {isActive && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
+                          )}
+                          <MessageSquare size={12} className="shrink-0 text-neutral-600" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[12px] truncate">
+                              {cs.summary || 'Session'}
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-neutral-600 whitespace-nowrap">
+                            {timeAgo(cs.updated_at)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

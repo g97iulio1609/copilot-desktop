@@ -2,17 +2,17 @@
 
 /* ── Theme Custom Properties ────────────────────────────── */
 :root {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
-  --bg-tertiary: #1c2128;
+  --bg-primary: #0e0e0e;
+  --bg-secondary: #1a1a1a;
+  --bg-tertiary: #2a2a2a;
   --accent: #238636;
   --accent-hover: #2ea043;
   --accent-subtle: rgba(35, 134, 54, 0.15);
   --text-primary: #e6edf3;
   --text-secondary: #b1bac4;
   --text-muted: #6e7681;
-  --border: rgba(240, 246, 252, 0.06);
-  --border-hover: rgba(240, 246, 252, 0.1);
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.1);
 }
 
 * {
@@ -37,7 +37,7 @@ body,
 }
 
 body {
-  background: var(--bg-primary);
+  background: #0e0e0e;
 }
 
 /* ── Typography ─────────────────────────────────────────── */
@@ -53,38 +53,32 @@ code, pre, .font-mono {
   font-feature-settings: 'liga' 1, 'calt' 1;
 }
 
-/* ── Vibrancy glass-morphism utilities ──────────────────── */
+/* ── Solid panel utilities (Codex style, no glass) ─────── */
 .glass-panel {
-  background: rgba(13, 17, 23, 0.72);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: #0e0e0e;
 }
 
 .glass-sidebar {
-  background: rgba(13, 17, 23, 0.6);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  background: #1a1a1a;
 }
 
 .glass-titlebar {
-  background: rgba(22, 27, 34, 0.5);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  background: #1a1a1a;
 }
 
 /* ── Custom scrollbar ───────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(139, 148, 158, 0.18);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(139, 148, 158, 0.35);
+  background: rgba(255, 255, 255, 0.15);
 }
 ::-webkit-scrollbar-corner {
   background: transparent;

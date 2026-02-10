@@ -6,7 +6,7 @@ import { useCopilot } from '@/hooks/useCopilot';
 import { MessageBubble } from './MessageBubble';
 import { InputArea } from './InputArea';
 import { StreamingIndicator } from './StreamingIndicator';
-import { Bot, Sparkles, ChevronDown, FolderOpen } from 'lucide-react';
+import { Bot, Cloud, ChevronDown } from 'lucide-react';
 import { useRef, useEffect, useState, useCallback } from 'react';
 
 export function ChatPanel() {
@@ -22,14 +22,12 @@ export function ChatPanel() {
   const activeSession = sessions.find((s) => s.id === activeSessionId);
   const messages = activeSessionId ? getSessionMessages(activeSessionId) : [];
 
-  // Auto-scroll on new messages
   useEffect(() => {
     if (!showScrollButton) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, showScrollButton]);
 
-  // Detect if user scrolled up
   const handleScroll = useCallback(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -58,59 +56,42 @@ export function ChatPanel() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
-      {/* Session header */}
-      {activeSession && (
-        <div className="flex items-center gap-3 px-6 py-2.5 border-b border-white/[0.06]">
-          <h2 className="text-sm font-medium text-zinc-200 truncate tracking-tight">
-            {activeSession.name}
-          </h2>
-          {activeSession.working_dir && (
-            <span className="flex items-center gap-1 text-[11px] text-zinc-500 truncate font-mono">
-              <FolderOpen size={11} />
-              {activeSession.working_dir}
-            </span>
-          )}
-          {activeSession.model && (
-            <span className="ml-auto text-[11px] text-zinc-500 bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-md font-mono">
-              {activeSession.model}
-            </span>
-          )}
-        </div>
-      )}
-
+    <div className="flex-1 flex flex-col min-h-0">
       {/* Messages */}
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-6 py-6 space-y-6"
+        className="flex-1 overflow-y-auto min-h-0 px-6 py-6"
       >
         {messages.length === 0 && (
-          <div className="flex-1 flex items-center justify-center h-full">
-            <div className="text-center space-y-3">
-              <Sparkles size={48} className="mx-auto text-emerald-500/40" />
-              <p className="text-zinc-500 text-lg">
-                Start a conversation with Copilot
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center space-y-4">
+              <Cloud size={48} className="mx-auto text-neutral-600" />
+              <p className="text-neutral-400 text-2xl font-semibold">
+                Let's build
               </p>
-              <p className="text-zinc-600 text-sm max-w-md">
-                Ask me to build, edit, debug, or explain code. I can access your
-                files, run commands, and create pull requests.
-              </p>
+              {activeSession?.working_dir && (
+                <p className="text-neutral-600 text-sm font-mono">
+                  {activeSession.working_dir}
+                </p>
+              )}
             </div>
           </div>
         )}
 
-        {messages.map((msg, i) => (
-          <MessageBubble
-            key={msg.id}
-            message={msg}
-            isStreaming={isStreaming && i === messages.length - 1 && msg.role === 'assistant'}
-          />
-        ))}
+        <div className="max-w-3xl mx-auto space-y-6">
+          {messages.map((msg, i) => (
+            <MessageBubble
+              key={msg.id}
+              message={msg}
+              isStreaming={isStreaming && i === messages.length - 1 && msg.role === 'assistant'}
+            />
+          ))}
 
-        {isStreaming && messages[messages.length - 1]?.role !== 'assistant' && (
-          <StreamingIndicator showElapsed />
-        )}
+          {isStreaming && messages[messages.length - 1]?.role !== 'assistant' && (
+            <StreamingIndicator showElapsed />
+          )}
+        </div>
 
         <div ref={messagesEndRef} />
       </div>
@@ -123,8 +104,8 @@ export function ChatPanel() {
             className={cn(
               'absolute -top-12 left-1/2 -translate-x-1/2',
               'flex items-center gap-1 px-3 py-1.5 rounded-full',
-              'bg-zinc-800 border border-zinc-700/50 text-zinc-400',
-              'text-xs hover:text-zinc-200 transition-colors shadow-lg',
+              'bg-neutral-800 border border-neutral-700/50 text-neutral-400',
+              'text-xs hover:text-neutral-200 transition-colors shadow-lg',
             )}
           >
             <ChevronDown size={14} />
@@ -148,16 +129,13 @@ export function ChatPanel() {
 function WelcomeScreen() {
   return (
     <div className="flex-1 flex items-center justify-center">
-      <div className="text-center space-y-6 max-w-lg">
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-600 mx-auto flex items-center justify-center shadow-lg shadow-emerald-600/20">
-          <Sparkles size={40} className="text-white" />
-        </div>
-        <h1 className="text-2xl font-bold text-zinc-200">
-          Welcome to Copilot Desktop
+      <div className="text-center space-y-4">
+        <Cloud size={48} className="mx-auto text-neutral-600" />
+        <h1 className="text-2xl font-semibold text-neutral-300">
+          Let's build
         </h1>
-        <p className="text-zinc-500">
-          A beautiful desktop interface for GitHub Copilot CLI. Create a new
-          session to get started.
+        <p className="text-neutral-600 text-sm">
+          Create a new session to get started.
         </p>
       </div>
     </div>
@@ -171,13 +149,13 @@ function CopilotNotFound() {
         <div className="w-16 h-16 rounded-xl bg-amber-500/20 mx-auto flex items-center justify-center">
           <Bot size={32} className="text-amber-400" />
         </div>
-        <h2 className="text-xl font-semibold text-zinc-200">
+        <h2 className="text-xl font-semibold text-neutral-200">
           Copilot CLI Not Found
         </h2>
-        <p className="text-zinc-500 text-sm">
+        <p className="text-neutral-500 text-sm">
           Please install GitHub Copilot CLI first:
         </p>
-        <code className="block bg-zinc-800 rounded-lg px-4 py-2 text-sm text-emerald-400">
+        <code className="block bg-neutral-800 rounded-lg px-4 py-2 text-sm text-emerald-400">
           brew install copilot-cli
         </code>
       </div>

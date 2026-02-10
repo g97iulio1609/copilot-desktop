@@ -134,3 +134,13 @@ export interface McpServerConfig {
   enabled: boolean;
   status: string | null;
 }
+
+export interface CopilotSession {
+  id: string;
+  cwd: string;
+  summary: string | null;
+  repository: string | null;
+  branch: string | null;
+  created_at: string;
+  updated_at: string;
+}

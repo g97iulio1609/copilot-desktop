@@ -13,9 +13,11 @@ export function ModelSelector() {
 
   const activeSession = sessions.find((s) => s.id === activeSessionId);
   const currentModel = activeSession?.model;
+  const [defaultModel, setDefaultModel] = useState<string | null>(null);
 
   useEffect(() => {
     tauriApi.listAvailableModels().then(setModels).catch(console.error);
+    tauriApi.getDefaultModel().then(setDefaultModel).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -40,7 +42,8 @@ export function ModelSelector() {
     return acc;
   }, {});
 
-  const displayName = models.find((m) => m.id === currentModel)?.name ?? currentModel ?? 'Select Model';
+  const effectiveModel = currentModel ?? defaultModel;
+  const displayName = models.find((m) => m.id === effectiveModel)?.name ?? effectiveModel ?? 'Select Model';
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -69,7 +72,7 @@ export function ModelSelector() {
                   onClick={() => handleSelect(model)}
                   className={cn(
                     'flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors',
-                    model.id === currentModel
+                    model.id === effectiveModel
                       ? 'bg-blue-600/10 text-blue-400'
                       : 'text-zinc-300 hover:bg-zinc-700'
                   )}
@@ -78,7 +81,7 @@ export function ModelSelector() {
                     <p className="font-medium text-xs">{model.name}</p>
                     <p className="text-[10px] text-zinc-500">{model.description}</p>
                   </div>
-                  {model.id === currentModel && <Check size={14} className="shrink-0 text-blue-400" />}
+                  {model.id === effectiveModel && <Check size={14} className="shrink-0 text-blue-400" />}
                 </button>
               ))}
             </div>

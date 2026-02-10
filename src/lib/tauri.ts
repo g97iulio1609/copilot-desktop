@@ -1,12 +1,15 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { AuthStatus, CopilotStatus, SessionInfo, AppConfig, FileChangeEvent, DiffResult, McpServerConfig, ModelInfo, AgentMode, PluginInfo, UsageMetrics } from '@/types';
+import type { AuthStatus, CopilotStatus, SessionInfo, AppConfig, FileChangeEvent, DiffResult, McpServerConfig, ModelInfo, AgentMode, PluginInfo, UsageMetrics, CopilotSession } from '@/types';
 
 export const tauriApi = {
   checkCopilotStatus: () => invoke<CopilotStatus>('check_copilot_status'),
 
   checkAuth: () => invoke<AuthStatus>('check_auth'),
 
-  triggerLogin: () => invoke<void>('check_auth'),
+  triggerLogin: () =>
+    invoke<void>('trigger_login'),
+
+  getDefaultModel: () => invoke<string>('get_default_model'),
 
   openProject: (path: string, name?: string) =>
     invoke<SessionInfo>('open_project', { path, name }),
@@ -95,4 +98,19 @@ export const tauriApi = {
 
   clearSessionHistory: (sessionId: string) =>
     invoke<void>('clear_session_history', { sessionId }),
+
+  listCopilotSessions: () =>
+    invoke<CopilotSession[]>('list_copilot_sessions'),
+
+  getCopilotConfig: () =>
+    invoke<Record<string, unknown>>('get_copilot_config'),
+
+  resumeSession: (sessionId: string) =>
+    invoke<SessionInfo>('resume_session', { sessionId }),
+
+  getSessionEvents: (sessionId: string) =>
+    invoke<Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: string }>>(
+      'get_session_events',
+      { sessionId }
+    ),
 };
