@@ -1,6 +1,8 @@
 import { cn } from '@/lib/utils';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useSessionStore } from '@/stores/sessionStore';
+import { useFileStore } from '@/stores/fileStore';
+import { FileTree } from '@/components/files/FileTree';
 import {
   MessageSquare,
   Plus,
@@ -8,6 +10,7 @@ import {
   Puzzle,
   Server,
   ChevronLeft,
+  GitCompare,
 } from 'lucide-react';
 import type { AppView } from '@/types';
 
@@ -19,9 +22,10 @@ const navItems: { id: AppView; icon: typeof MessageSquare; label: string }[] = [
 ];
 
 export function Sidebar() {
-  const { currentView, setCurrentView, sidebarOpen, toggleSidebar } =
+  const { currentView, setCurrentView, sidebarOpen, toggleSidebar, toggleInspector } =
     useSettingsStore();
   const { sessions, activeSessionId, setActiveSession } = useSessionStore();
+  const { changedFiles } = useFileStore();
 
   return (
     <div
@@ -69,7 +73,7 @@ export function Sidebar() {
 
       {/* Sessions list */}
       {sidebarOpen && sessions.length > 0 && (
-        <div className="px-2 mb-4 flex-1 overflow-y-auto">
+        <div className="px-2 mb-4 overflow-y-auto">
           <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-2">
             Sessions
           </span>
@@ -91,6 +95,25 @@ export function Sidebar() {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Files section */}
+      {sidebarOpen && changedFiles.length > 0 && (
+        <div className="px-2 mb-4">
+          <button
+            onClick={toggleInspector}
+            className="flex items-center gap-1.5 px-2 py-1 mb-1 w-full text-left rounded-md hover:bg-zinc-800/50 transition-colors group"
+          >
+            <GitCompare size={14} className="text-zinc-500 group-hover:text-zinc-400" />
+            <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider group-hover:text-zinc-400">
+              Changed Files
+            </span>
+            <span className="ml-auto text-xs bg-blue-600/20 text-blue-400 px-1.5 py-0.5 rounded-full font-medium">
+              {changedFiles.length}
+            </span>
+          </button>
+          <FileTree />
         </div>
       )}
 

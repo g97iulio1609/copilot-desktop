@@ -51,6 +51,13 @@ pub struct SessionInfo {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AuthStatus {
+    pub authenticated: bool,
+    pub username: Option<String>,
+    pub email: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CopilotStatus {
     pub installed: bool,
     pub path: Option<String>,
@@ -77,4 +84,42 @@ pub enum ParsedOutput {
     Thinking(String),
     Error(String),
     RawLine(String),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileChangeEvent {
+    pub path: String,
+    pub kind: String,
+    pub timestamp: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileNode {
+    pub name: String,
+    pub path: String,
+    pub is_dir: bool,
+    pub children: Option<Vec<FileNode>>,
+    pub change_kind: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiffResult {
+    pub path: String,
+    pub hunks: Vec<DiffHunk>,
+    pub additions: usize,
+    pub deletions: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiffHunk {
+    pub header: String,
+    pub lines: Vec<DiffLine>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DiffLine {
+    pub content: String,
+    pub line_type: String,
+    pub old_line: Option<usize>,
+    pub new_line: Option<usize>,
 }
