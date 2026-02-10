@@ -3,6 +3,7 @@ import { useSettingsStore } from '@/stores/settingsStore';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useFileStore } from '@/stores/fileStore';
 import { FileTree } from '@/components/files/FileTree';
+import { SessionList } from '@/components/session/SessionList';
 import {
   MessageSquare,
   Plus,
@@ -72,28 +73,13 @@ export function Sidebar() {
       </div>
 
       {/* Sessions list */}
-      {sidebarOpen && sessions.length > 0 && (
+      {sidebarOpen && (
         <div className="px-2 mb-4 overflow-y-auto">
           <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider px-2">
             Sessions
           </span>
-          <div className="mt-1 space-y-0.5">
-            {sessions.map((session) => (
-              <button
-                key={session.id}
-                onClick={() => setActiveSession(session.id)}
-                className={cn(
-                  'flex items-center gap-2 w-full px-3 py-1.5 rounded-md text-sm',
-                  'transition-colors truncate',
-                  session.id === activeSessionId
-                    ? 'bg-zinc-800 text-zinc-200'
-                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-300'
-                )}
-              >
-                <MessageSquare size={14} className="shrink-0" />
-                <span className="truncate">{session.name}</span>
-              </button>
-            ))}
+          <div className="mt-1">
+            <SessionList />
           </div>
         </div>
       )}

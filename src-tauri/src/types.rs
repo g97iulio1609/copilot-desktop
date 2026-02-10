@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
@@ -40,12 +42,29 @@ pub enum MessageRole {
     System,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
+pub enum AgentMode {
+    Suggest,
+    AutoEdit,
+    Autopilot,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ModelInfo {
+    pub id: String,
+    pub name: String,
+    pub provider: String,
+    pub description: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SessionInfo {
     pub id: String,
     pub name: String,
     pub working_dir: String,
     pub model: Option<String>,
+    pub mode: AgentMode,
     pub created_at: u64,
     pub is_active: bool,
 }
@@ -122,4 +141,26 @@ pub struct DiffLine {
     pub line_type: String,
     pub old_line: Option<usize>,
     pub new_line: Option<usize>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PluginInfo {
+    pub name: String,
+    pub version: String,
+    pub description: String,
+    pub author: String,
+    pub installed: bool,
+    pub update_available: bool,
+    pub category: Option<String>,
+    pub downloads: Option<u64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct McpServerConfig {
+    pub name: String,
+    pub command: String,
+    pub args: Vec<String>,
+    pub env: Option<HashMap<String, String>>,
+    pub enabled: bool,
+    pub status: Option<String>,
 }

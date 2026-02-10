@@ -1,6 +1,10 @@
 import { useSettingsStore } from '@/stores/settingsStore';
 import { ChatPanel } from '@/components/chat/ChatPanel';
 import { InspectorPanel } from '@/components/layout/InspectorPanel';
+import { Toolbar } from '@/components/layout/Toolbar';
+import { SessionTabs } from '@/components/session/SessionTabs';
+import { McpManager } from '@/components/mcp/McpManager';
+import { PluginMarketplace } from '@/components/plugins/PluginMarketplace';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 export function MainPanel() {
@@ -8,6 +12,8 @@ export function MainPanel() {
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-zinc-900">
+      <SessionTabs />
+      <Toolbar />
       {currentView === 'chat' && (
         <PanelGroup direction="horizontal" className="flex-1">
           <Panel defaultSize={inspectorOpen ? 60 : 100} minSize={40}>
@@ -24,8 +30,8 @@ export function MainPanel() {
         </PanelGroup>
       )}
       {currentView === 'settings' && <SettingsPlaceholder />}
-      {currentView === 'mcp' && <McpPlaceholder />}
-      {currentView === 'plugins' && <PluginsPlaceholder />}
+      {currentView === 'mcp' && <McpManager />}
+      {currentView === 'plugins' && <PluginMarketplace />}
     </div>
   );
 }
@@ -34,22 +40,6 @@ function SettingsPlaceholder() {
   return (
     <div className="flex-1 flex items-center justify-center text-zinc-500">
       <p className="text-lg">Settings — Coming in Phase 8</p>
-    </div>
-  );
-}
-
-function McpPlaceholder() {
-  return (
-    <div className="flex-1 flex items-center justify-center text-zinc-500">
-      <p className="text-lg">MCP Server Manager — Coming in Phase 6</p>
-    </div>
-  );
-}
-
-function PluginsPlaceholder() {
-  return (
-    <div className="flex-1 flex items-center justify-center text-zinc-500">
-      <p className="text-lg">Plugin Marketplace — Coming in Phase 7</p>
     </div>
   );
 }
