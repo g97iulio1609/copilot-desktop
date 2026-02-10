@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { AuthStatus, CopilotStatus, SessionInfo, AppConfig, FileChangeEvent, DiffResult } from '@/types';
+import type { AuthStatus, CopilotStatus, SessionInfo, AppConfig, FileChangeEvent, DiffResult, McpServerConfig, ModelInfo, AgentMode, PluginInfo } from '@/types';
 
 export const tauriApi = {
   checkCopilotStatus: () => invoke<CopilotStatus>('check_copilot_status'),
@@ -38,4 +38,52 @@ export const tauriApi = {
 
   getDiff: (path: string) =>
     invoke<DiffResult>('get_diff', { path }),
+
+  listMcpServers: () =>
+    invoke<McpServerConfig[]>('list_mcp_servers'),
+
+  addMcpServer: (config: McpServerConfig) =>
+    invoke<void>('add_mcp_server', { config }),
+
+  updateMcpServer: (name: string, config: McpServerConfig) =>
+    invoke<void>('update_mcp_server', { name, config }),
+
+  deleteMcpServer: (name: string) =>
+    invoke<void>('delete_mcp_server', { name }),
+
+  toggleMcpServer: (name: string, enabled: boolean) =>
+    invoke<void>('toggle_mcp_server', { name, enabled }),
+
+  renameSession: (sessionId: string, name: string) =>
+    invoke<void>('rename_session', { sessionId, name }),
+
+  getSession: (sessionId: string) =>
+    invoke<SessionInfo>('get_session', { sessionId }),
+
+  setModel: (sessionId: string, model: string) =>
+    invoke<void>('set_model', { sessionId, model }),
+
+  setMode: (sessionId: string, mode: AgentMode) =>
+    invoke<void>('set_mode', { sessionId, mode }),
+
+  listAvailableModels: () =>
+    invoke<ModelInfo[]>('list_available_models'),
+
+  sendSlashCommand: (sessionId: string, command: string) =>
+    invoke<void>('send_slash_command', { sessionId, command }),
+
+  listInstalledPlugins: () =>
+    invoke<PluginInfo[]>('list_installed_plugins'),
+
+  listAvailablePlugins: () =>
+    invoke<PluginInfo[]>('list_available_plugins'),
+
+  installPlugin: (sessionId: string, name: string) =>
+    invoke<void>('install_plugin', { sessionId, name }),
+
+  uninstallPlugin: (sessionId: string, name: string) =>
+    invoke<void>('uninstall_plugin', { sessionId, name }),
+
+  updatePlugin: (sessionId: string, name: string) =>
+    invoke<void>('update_plugin', { sessionId, name }),
 };

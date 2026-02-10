@@ -5,7 +5,9 @@ use crate::config::ConfigManager;
 use crate::pty::PtyManager;
 use crate::session::SessionManager;
 use crate::files::FileWatcher;
-use crate::types::{AppError, AuthStatus, CopilotStatus, DiffResult, FileChangeEvent, SessionInfo};
+use crate::types::{AgentMode, AppError, AuthStatus, CopilotStatus, DiffResult, FileChangeEvent, McpServerConfig, ModelInfo, PluginInfo, SessionInfo};
+use crate::mcp::McpManager;
+use crate::plugins::PluginManager;
 
 #[tauri::command]
 pub fn check_copilot_status(pty: State<'_, PtyManager>) -> CopilotStatus {
@@ -145,4 +147,158 @@ pub fn read_file(path: &str) -> Result<String, AppError> {
 #[tauri::command]
 pub fn get_diff(path: &str) -> Result<DiffResult, AppError> {
     FileWatcher::get_file_diff(path)
+}
+
+#[tauri::command]
+pub fn list_installed_plugins() -> Vec<PluginInfo> {
+    PluginManager::list_installed_plugins()
+}
+
+#[tauri::command]
+pub fn list_available_plugins() -> Vec<PluginInfo> {
+    PluginManager::list_available_plugins()
+}
+
+#[tauri::command]
+pub fn install_plugin(
+    session_id: &str,
+    name: &str,
+    pty: State<'_, PtyManager>,
+) -> Result<(), AppError> {
+    PluginManager::install_plugin(&pty, session_id, name)
+}
+
+#[tauri::command]
+pub fn uninstall_plugin(
+    session_id: &str,
+    name: &str,
+    pty: State<'_, PtyManager>,
+) -> Result<(), AppError> {
+    PluginManager::uninstall_plugin(&pty, session_id, name)
+}
+
+#[tauri::command]
+pub fn update_plugin(
+    session_id: &str,
+    name: &str,
+    pty: State<'_, PtyManager>,
+) -> Result<(), AppError> {
+    PluginManager::update_plugin(&pty, session_id, name)
+}
+
+#[tauri::command]
+pub fn rename_session(
+    session_id: &str,
+    name: &str,
+    session_mgr: State<'_, SessionManager>,
+) -> Result<(), AppError> {
+    if session_mgr.rename_session(session_id, name) {
+        Ok(())
+    } else {
+        Err(AppError::SessionNotFound(session_id.to_string()))
+    }
+}
+
+#[tauri::command]
+pub fn set_model(
+    session_id: &str,
+    model: &str,
+    session_mgr: State<'_, SessionManager>,
+    pty: State<'_, PtyManager>,
+) -> Result<(), AppError> {
+    session_mgr.set_session_model(session_id, model);
+    let command = format!("/model {}", model);
+    pty.write_to_session(session_id, &command)
+}
+
+#[tauri::command]
+pub fn set_mode(
+    session_id: &str,
+    mode: &str,
+    session_mgr: State<'_, SessionManager>,
+) -> Result<(), AppError> {
+    let agent_mode = match mode {
+        "suggest" => AgentMode::Suggest,
+        "autoedit" => AgentMode::AutoEdit,
+        "autopilot" => AgentMode::Autopilot,
+        _ => return Err(AppError::Other(format!("Unknown mode: {}", mode))),
+    };
+    if session_mgr.set_session_mode(session_id, agent_mode) {
+        Ok(())
+    } else {
+        Err(AppError::SessionNotFound(session_id.to_string()))
+    }
+}
+
+#[tauri::command]
+pub fn list_available_models() -> Vec<ModelInfo> {
+    vec![
+        ModelInfo {
+            id: "claude-sonnet-4-5".to_string(),
+            name: "Claude Sonnet 4.5".to_string(),
+            provider: "Anthropic".to_string(),
+            description: "Best balance of speed and intelligence".to_string(),
+        },
+        ModelInfo {
+            id: "claude-sonnet-4".to_string(),
+            name: "Claude Sonnet 4".to_string(),
+            provider: "Anthropic".to_string(),
+            description: "Fast and capable coding model".to_string(),
+        },
+        ModelInfo {
+            id: "gpt-5".to_string(),
+            name: "GPT-5".to_string(),
+            provider: "OpenAI".to_string(),
+            description: "Latest OpenAI flagship model".to_string(),
+        },
+    ]
+}
+
+#[tauri::command]
+pub fn send_slash_command(
+    session_id: &str,
+    command: &str,
+    pty: State<'_, PtyManager>,
+) -> Result<(), AppError> {
+    let slash_command = if command.starts_with('/') {
+        command.to_string()
+    } else {
+        format!("/{}", command)
+    };
+    pty.write_to_session(session_id, &slash_command)
+}
+
+#[tauri::command]
+pub fn get_session(
+    session_id: &str,
+    session_mgr: State<'_, SessionManager>,
+) -> Result<SessionInfo, AppError> {
+    session_mgr
+        .get_session(session_id)
+        .ok_or_else(|| AppError::SessionNotFound(session_id.to_string()))
+}
+
+#[tauri::command]
+pub fn list_mcp_servers(mcp: State<'_, McpManager>) -> Result<Vec<McpServerConfig>, AppError> {
+    mcp.list_servers()
+}
+
+#[tauri::command]
+pub fn add_mcp_server(config: McpServerConfig, mcp: State<'_, McpManager>) -> Result<(), AppError> {
+    mcp.add_server(config)
+}
+
+#[tauri::command]
+pub fn update_mcp_server(name: &str, config: McpServerConfig, mcp: State<'_, McpManager>) -> Result<(), AppError> {
+    mcp.update_server(name, config)
+}
+
+#[tauri::command]
+pub fn delete_mcp_server(name: &str, mcp: State<'_, McpManager>) -> Result<(), AppError> {
+    mcp.delete_server(name)
+}
+
+#[tauri::command]
+pub fn toggle_mcp_server(name: &str, enabled: bool, mcp: State<'_, McpManager>) -> Result<(), AppError> {
+    mcp.toggle_server(name, enabled)
 }

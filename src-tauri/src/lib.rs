@@ -2,12 +2,15 @@ mod auth;
 mod commands;
 mod config;
 mod files;
+mod mcp;
+mod plugins;
 mod pty;
 mod session;
 mod types;
 
 use config::ConfigManager;
 use files::FileWatcher;
+use mcp::McpManager;
 use pty::PtyManager;
 use session::SessionManager;
 
@@ -22,6 +25,7 @@ pub fn run() {
         .manage(SessionManager::new())
         .manage(ConfigManager::new())
         .manage(FileWatcher::new())
+        .manage(McpManager::new())
         .invoke_handler(tauri::generate_handler![
             commands::check_copilot_status,
             commands::create_session,
@@ -39,6 +43,22 @@ pub fn run() {
             commands::list_changed_files,
             commands::read_file,
             commands::get_diff,
+            commands::list_mcp_servers,
+            commands::add_mcp_server,
+            commands::update_mcp_server,
+            commands::delete_mcp_server,
+            commands::toggle_mcp_server,
+            commands::rename_session,
+            commands::set_model,
+            commands::set_mode,
+            commands::list_available_models,
+            commands::send_slash_command,
+            commands::get_session,
+            commands::list_installed_plugins,
+            commands::list_available_plugins,
+            commands::install_plugin,
+            commands::uninstall_plugin,
+            commands::update_plugin,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

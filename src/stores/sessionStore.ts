@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { SessionInfo } from '@/types';
+import type { SessionInfo, AgentMode } from '@/types';
 
 interface SessionState {
   sessions: SessionInfo[];
@@ -8,6 +8,9 @@ interface SessionState {
   addSession: (session: SessionInfo) => void;
   setActiveSession: (id: string) => void;
   removeSession: (id: string) => void;
+  renameSession: (id: string, name: string) => void;
+  setSessionModel: (id: string, model: string) => void;
+  setSessionMode: (id: string, mode: AgentMode) => void;
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
@@ -29,5 +32,26 @@ export const useSessionStore = create<SessionState>((set) => ({
       sessions: state.sessions.filter((s) => s.id !== id),
       activeSessionId:
         state.activeSessionId === id ? null : state.activeSessionId,
+    })),
+
+  renameSession: (id, name) =>
+    set((state) => ({
+      sessions: state.sessions.map((s) =>
+        s.id === id ? { ...s, name } : s
+      ),
+    })),
+
+  setSessionModel: (id, model) =>
+    set((state) => ({
+      sessions: state.sessions.map((s) =>
+        s.id === id ? { ...s, model } : s
+      ),
+    })),
+
+  setSessionMode: (id, mode) =>
+    set((state) => ({
+      sessions: state.sessions.map((s) =>
+        s.id === id ? { ...s, mode } : s
+      ),
     })),
 }));

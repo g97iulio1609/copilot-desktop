@@ -3,7 +3,7 @@ use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 use uuid::Uuid;
 
-use crate::types::SessionInfo;
+use crate::types::{AgentMode, SessionInfo};
 
 pub struct SessionManager {
     sessions: Mutex<HashMap<String, SessionInfo>>,
@@ -30,6 +30,7 @@ impl SessionManager {
             name: name.to_string(),
             working_dir: working_dir.to_string(),
             model: None,
+            mode: AgentMode::Suggest,
             created_at: now,
             is_active: true,
         };
@@ -88,5 +89,48 @@ impl SessionManager {
             }
         }
         removed
+    }
+
+    pub fn get_session(&self, session_id: &str) -> Option<SessionInfo> {
+        let active = self.active_session.lock().unwrap_or_else(|e| e.into_inner()).clone();
+        self.sessions
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .get(session_id)
+            .map(|s| {
+                let mut session = s.clone();
+                session.is_active = active.as_deref() == Some(&session.id);
+                session
+            })
+    }
+
+    pub fn rename_session(&self, session_id: &str, new_name: &str) -> bool {
+        let mut sessions = self.sessions.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(session) = sessions.get_mut(session_id) {
+            session.name = new_name.to_string();
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn set_session_model(&self, session_id: &str, model: &str) -> bool {
+        let mut sessions = self.sessions.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(session) = sessions.get_mut(session_id) {
+            session.model = Some(model.to_string());
+            true
+        } else {
+            false
+        }
+    }
+
+    pub fn set_session_mode(&self, session_id: &str, mode: AgentMode) -> bool {
+        let mut sessions = self.sessions.lock().unwrap_or_else(|e| e.into_inner());
+        if let Some(session) = sessions.get_mut(session_id) {
+            session.mode = mode;
+            true
+        } else {
+            false
+        }
     }
 }

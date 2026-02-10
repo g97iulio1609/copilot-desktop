@@ -11,11 +11,21 @@ export interface CopilotMessage {
   timestamp: number;
 }
 
+export type AgentMode = 'suggest' | 'autoedit' | 'autopilot';
+
+export interface ModelInfo {
+  id: string;
+  name: string;
+  provider: string;
+  description: string;
+}
+
 export interface SessionInfo {
   id: string;
   name: string;
   working_dir: string;
   model: string | null;
+  mode: AgentMode;
   created_at: number;
   is_active: boolean;
 }
@@ -72,4 +82,24 @@ export interface DiffLine {
   line_type: 'add' | 'remove' | 'context';
   old_line: number | null;
   new_line: number | null;
+}
+
+export interface PluginInfo {
+  name: string;
+  version: string;
+  description: string;
+  author: string;
+  installed: boolean;
+  update_available: boolean;
+  category: string | null;
+  downloads: number | null;
+}
+
+export interface McpServerConfig {
+  name: string;
+  command: string;
+  args: string[];
+  env: Record<string, string> | null;
+  enabled: boolean;
+  status: string | null;
 }
