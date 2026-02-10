@@ -45,6 +45,8 @@ impl PtyManager {
         &self,
         session_id: &str,
         working_dir: &str,
+        model: Option<&str>,
+        mode: Option<&str>,
         app_handle: AppHandle,
     ) -> Result<(), AppError> {
         let copilot_path = self
@@ -63,6 +65,16 @@ impl PtyManager {
 
         let mut cmd = CommandBuilder::new(&copilot_path);
         cmd.cwd(working_dir);
+        cmd.arg("--add-dir");
+        cmd.arg(working_dir);
+        if let Some(m) = model {
+            cmd.arg("--model");
+            cmd.arg(m);
+        }
+        if mode == Some("autopilot") {
+            cmd.arg("--allow-all-tools");
+        }
+        cmd.env("TERM", "xterm-256color");
 
         let child = pair
             .slave

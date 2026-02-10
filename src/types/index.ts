@@ -65,8 +65,18 @@ export interface KeyboardShortcut {
   category: string;
 }
 
+export type ParsedOutput =
+  | { type: 'Text'; data: string }
+  | { type: 'CodeBlock'; data: { language: string | null; code: string } }
+  | { type: 'ToolExecution'; data: { tool: string; status: string } }
+  | { type: 'FileChange'; data: { path: string; action: string } }
+  | { type: 'Thinking'; data: string }
+  | { type: 'Error'; data: string }
+  | { type: 'RawLine'; data: string };
+
 export type PtyEvent =
   | { type: 'Output'; data: string }
+  | { type: 'Parsed'; data: ParsedOutput }
   | { type: 'Error'; data: string }
   | { type: 'Exit'; data: number };
 

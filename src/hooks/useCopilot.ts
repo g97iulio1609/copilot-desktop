@@ -55,7 +55,32 @@ export function useCopilot(sessionId: string | null) {
           if (cancelled) return;
           const ptyEvent = event.payload;
 
-          if (ptyEvent.type === 'Output') {
+          if (ptyEvent.type === 'Parsed') {
+            const parsed = ptyEvent.data;
+            switch (parsed.type) {
+              case 'Text':
+              case 'RawLine':
+                appendToLastMessage(sessionId, parsed.data);
+                break;
+              case 'CodeBlock': {
+                const lang = parsed.data.language || '';
+                appendToLastMessage(sessionId, `\n\`\`\`${lang}\n${parsed.data.code}\n\`\`\`\n`);
+                break;
+              }
+              case 'ToolExecution':
+                appendToLastMessage(sessionId, `\n🔧 *${parsed.data.tool}*: ${parsed.data.status}\n`);
+                break;
+              case 'FileChange':
+                appendToLastMessage(sessionId, `\n📄 *${parsed.data.action}*: \`${parsed.data.path}\`\n`);
+                break;
+              case 'Thinking':
+                appendToLastMessage(sessionId, `\n💭 ${parsed.data}\n`);
+                break;
+              case 'Error':
+                appendToLastMessage(sessionId, `\n❌ ${parsed.data}\n`);
+                break;
+            }
+          } else if (ptyEvent.type === 'Output') {
             appendToLastMessage(sessionId, ptyEvent.data);
           } else if (ptyEvent.type === 'Error') {
             appendToLastMessage(sessionId, `\n\n*Error: ${ptyEvent.data}*`);

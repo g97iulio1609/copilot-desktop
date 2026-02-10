@@ -31,7 +31,14 @@ pub fn create_session(
     app_handle: AppHandle,
 ) -> Result<SessionInfo, AppError> {
     let session = session_mgr.create_session(name, working_dir);
-    pty.spawn_session(&session.id, working_dir, app_handle.clone())?;
+    let model = config.get_config().default_model;
+    pty.spawn_session(
+        &session.id,
+        working_dir,
+        model.as_deref(),
+        Some("suggest"),
+        app_handle.clone(),
+    )?;
     let _ = file_watcher.start_watching(&session.id, working_dir, app_handle);
     config.add_recent_project(working_dir);
     Ok(session)
@@ -110,7 +117,14 @@ pub fn open_project(
             .unwrap_or("project")
     });
     let session = session_mgr.create_session(session_name, path);
-    pty.spawn_session(&session.id, path, app_handle.clone())?;
+    let model = config.get_config().default_model;
+    pty.spawn_session(
+        &session.id,
+        path,
+        model.as_deref(),
+        Some("suggest"),
+        app_handle.clone(),
+    )?;
     let _ = file_watcher.start_watching(&session.id, path, app_handle);
     config.add_recent_project(path);
     Ok(session)

@@ -1,7 +1,44 @@
 use serde_json::Value;
 use std::path::PathBuf;
+use std::process::Command;
 
 use crate::types::AuthStatus;
+
+fn extract_username(output: &str) -> Option<String> {
+    // Try to extract username from "Logged in as <username>" or similar patterns
+    for line in output.lines() {
+        let line = line.trim();
+        if let Some(rest) = line.strip_prefix("Logged in as ") {
+            return Some(rest.trim().to_string());
+        }
+        if line.contains("username:") || line.contains("Username:") {
+            if let Some(name) = line.split(':').nth(1) {
+                return Some(name.trim().to_string());
+            }
+        }
+    }
+    None
+}
+
+/// Try running `copilot auth status` to check auth
+fn check_auth_via_cli() -> Option<AuthStatus> {
+    let output = Command::new("copilot")
+        .arg("auth")
+        .arg("status")
+        .output()
+        .ok()?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    if stdout.contains("Logged in") || output.status.success() {
+        Some(AuthStatus {
+            authenticated: true,
+            username: extract_username(&stdout),
+            email: None,
+        })
+    } else {
+        None
+    }
+}
 
 /// Try to read GitHub auth info from ~/.copilot/ config files
 fn read_copilot_config() -> Option<AuthStatus> {
@@ -68,9 +105,12 @@ fn read_copilot_config() -> Option<AuthStatus> {
 
 /// Check if the user is authenticated with GitHub Copilot
 pub fn check_auth_status() -> AuthStatus {
-    read_copilot_config().unwrap_or(AuthStatus {
-        authenticated: false,
-        username: None,
-        email: None,
-    })
+    // Try CLI-based detection first, then fall back to file-based
+    check_auth_via_cli()
+        .or_else(read_copilot_config)
+        .unwrap_or(AuthStatus {
+            authenticated: false,
+            username: None,
+            email: None,
+        })
 }
