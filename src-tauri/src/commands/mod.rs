@@ -41,6 +41,16 @@ pub fn send_message(
 }
 
 #[tauri::command]
+pub fn resize_terminal(
+    session_id: &str,
+    rows: u16,
+    cols: u16,
+    pty: State<'_, PtyManager>,
+) -> Result<(), AppError> {
+    pty.resize_pty(session_id, rows, cols)
+}
+
+#[tauri::command]
 pub fn list_sessions(session_mgr: State<'_, SessionManager>) -> Vec<SessionInfo> {
     session_mgr.list_sessions()
 }

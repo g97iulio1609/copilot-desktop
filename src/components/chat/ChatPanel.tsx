@@ -2,33 +2,52 @@ import { cn } from '@/lib/utils';
 import { useChatStore } from '@/stores/chatStore';
 import { useSessionStore } from '@/stores/sessionStore';
 import { useSettingsStore } from '@/stores/settingsStore';
-import { Bot, User, Send, Sparkles } from 'lucide-react';
-import { useRef, useEffect } from 'react';
+import { useCopilot } from '@/hooks/useCopilot';
+import { MessageBubble } from './MessageBubble';
+import { InputArea } from './InputArea';
+import { StreamingIndicator } from './StreamingIndicator';
+import { Bot, Sparkles, ChevronDown, FolderOpen } from 'lucide-react';
+import { useRef, useEffect, useState, useCallback } from 'react';
 
 export function ChatPanel() {
-  const { messages, inputValue, setInputValue, isStreaming } = useChatStore();
-  const { activeSessionId } = useSessionStore();
+  const { inputValue, setInputValue, isStreaming, getSessionMessages } = useChatStore();
+  const { activeSessionId, sessions } = useSessionStore();
   const { copilotStatus } = useSettingsStore();
+  const { sendPrompt } = useCopilot(activeSessionId);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [showScrollButton, setShowScrollButton] = useState(false);
 
+  const activeSession = sessions.find((s) => s.id === activeSessionId);
+  const messages = activeSessionId ? getSessionMessages(activeSessionId) : [];
+
+  // Auto-scroll on new messages
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputValue.trim() || isStreaming) return;
-    // Will be connected to PTY in Phase 2
-    setInputValue('');
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
+    if (!showScrollButton) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  };
+  }, [messages, showScrollButton]);
+
+  // Detect if user scrolled up
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    setShowScrollButton(distanceFromBottom > 100);
+  }, []);
+
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setShowScrollButton(false);
+  }, []);
+
+  const handleSubmit = useCallback(() => {
+    if (!inputValue.trim() || isStreaming) return;
+    const msg = inputValue;
+    setInputValue('');
+    sendPrompt(msg);
+  }, [inputValue, isStreaming, setInputValue, sendPrompt]);
 
   if (!copilotStatus?.installed) {
     return <CopilotNotFound />;
@@ -40,8 +59,32 @@ export function ChatPanel() {
 
   return (
     <div className="flex-1 flex flex-col">
+      {/* Session header */}
+      {activeSession && (
+        <div className="flex items-center gap-3 px-6 py-2.5 border-b border-zinc-800/50">
+          <h2 className="text-sm font-medium text-zinc-300 truncate">
+            {activeSession.name}
+          </h2>
+          {activeSession.working_dir && (
+            <span className="flex items-center gap-1 text-[11px] text-zinc-600 truncate">
+              <FolderOpen size={11} />
+              {activeSession.working_dir}
+            </span>
+          )}
+          {activeSession.model && (
+            <span className="ml-auto text-[11px] text-zinc-600 bg-zinc-800/50 px-2 py-0.5 rounded">
+              {activeSession.model}
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-6 py-4 space-y-4"
+      >
         {messages.length === 0 && (
           <div className="flex-1 flex items-center justify-center h-full">
             <div className="text-center space-y-3">
@@ -57,71 +100,47 @@ export function ChatPanel() {
           </div>
         )}
 
-        {messages.map((msg) => (
-          <div
+        {messages.map((msg, i) => (
+          <MessageBubble
             key={msg.id}
-            className={cn(
-              'flex gap-3 max-w-3xl',
-              msg.role === 'user' ? 'ml-auto flex-row-reverse' : ''
-            )}
-          >
-            <div
-              className={cn(
-                'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
-                msg.role === 'user'
-                  ? 'bg-blue-600/20 text-blue-400'
-                  : 'bg-emerald-600/20 text-emerald-400'
-              )}
-            >
-              {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
-            </div>
-            <div
-              className={cn(
-                'rounded-xl px-4 py-3 text-sm leading-relaxed',
-                msg.role === 'user'
-                  ? 'bg-blue-600/20 text-zinc-200'
-                  : 'bg-zinc-800/80 text-zinc-300'
-              )}
-            >
-              {msg.content}
-            </div>
-          </div>
+            message={msg}
+            isStreaming={isStreaming && i === messages.length - 1 && msg.role === 'assistant'}
+          />
         ))}
+
+        {isStreaming && messages[messages.length - 1]?.role !== 'assistant' && (
+          <StreamingIndicator showElapsed />
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-zinc-800/50 p-4">
-        <form onSubmit={handleSubmit} className="max-w-3xl mx-auto relative">
-          <textarea
-            ref={inputRef}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Ask Copilot anything..."
-            rows={1}
-            className={cn(
-              'w-full resize-none rounded-xl bg-zinc-800/60 border border-zinc-700/50',
-              'px-4 py-3 pr-12 text-sm text-zinc-200 placeholder-zinc-500',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-transparent',
-              'transition-all'
-            )}
-          />
+      {/* Scroll to bottom button */}
+      {showScrollButton && (
+        <div className="relative">
           <button
-            type="submit"
-            disabled={!inputValue.trim() || isStreaming}
+            onClick={scrollToBottom}
             className={cn(
-              'absolute right-3 top-1/2 -translate-y-1/2',
-              'p-1.5 rounded-lg transition-colors',
-              inputValue.trim()
-                ? 'bg-blue-600 text-white hover:bg-blue-500'
-                : 'text-zinc-600'
+              'absolute -top-12 left-1/2 -translate-x-1/2',
+              'flex items-center gap-1 px-3 py-1.5 rounded-full',
+              'bg-zinc-800 border border-zinc-700/50 text-zinc-400',
+              'text-xs hover:text-zinc-200 transition-colors shadow-lg',
             )}
           >
-            <Send size={16} />
+            <ChevronDown size={14} />
+            New messages
           </button>
-        </form>
-      </div>
+        </div>
+      )}
+
+      {/* Input */}
+      <InputArea
+        value={inputValue}
+        onChange={setInputValue}
+        onSubmit={handleSubmit}
+        isStreaming={isStreaming}
+        modelName={activeSession?.model ?? undefined}
+      />
     </div>
   );
 }
