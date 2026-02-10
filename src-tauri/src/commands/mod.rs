@@ -5,7 +5,7 @@ use crate::config::ConfigManager;
 use crate::pty::PtyManager;
 use crate::session::SessionManager;
 use crate::files::FileWatcher;
-use crate::types::{AgentMode, AppError, AuthStatus, CopilotStatus, DiffResult, FileChangeEvent, McpServerConfig, ModelInfo, PluginInfo, SessionInfo};
+use crate::types::{AgentMode, AppError, AuthStatus, CopilotStatus, DiffResult, FileChangeEvent, McpServerConfig, ModelInfo, PluginInfo, SessionInfo, UsageMetrics};
 use crate::mcp::McpManager;
 use crate::plugins::PluginManager;
 
@@ -301,4 +301,39 @@ pub fn delete_mcp_server(name: &str, mcp: State<'_, McpManager>) -> Result<(), A
 #[tauri::command]
 pub fn toggle_mcp_server(name: &str, enabled: bool, mcp: State<'_, McpManager>) -> Result<(), AppError> {
     mcp.toggle_server(name, enabled)
+}
+
+#[tauri::command]
+pub fn update_config(
+    config: crate::config::AppConfig,
+    config_mgr: State<'_, ConfigManager>,
+) -> Result<(), AppError> {
+    config_mgr
+        .update_config(config)
+        .map_err(|e| AppError::Io(e))
+}
+
+#[tauri::command]
+pub fn get_usage_metrics(
+    session_id: &str,
+    session_mgr: State<'_, SessionManager>,
+) -> Result<UsageMetrics, AppError> {
+    let session = session_mgr
+        .get_session(session_id)
+        .ok_or_else(|| AppError::SessionNotFound(session_id.to_string()))?;
+    Ok(UsageMetrics {
+        premium_requests_used: 0,
+        premium_requests_limit: Some(300),
+        session_messages: 0,
+        session_tokens: None,
+        active_model: session.model.unwrap_or_else(|| "claude-sonnet-4-5".to_string()),
+    })
+}
+
+#[tauri::command]
+pub fn clear_session_history(
+    session_id: &str,
+    pty: State<'_, PtyManager>,
+) -> Result<(), AppError> {
+    pty.write_to_session(session_id, "/clear")
 }

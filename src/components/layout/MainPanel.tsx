@@ -5,6 +5,7 @@ import { Toolbar } from '@/components/layout/Toolbar';
 import { SessionTabs } from '@/components/session/SessionTabs';
 import { McpManager } from '@/components/mcp/McpManager';
 import { PluginMarketplace } from '@/components/plugins/PluginMarketplace';
+import { SettingsPanel } from '@/components/settings/SettingsPanel';
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 
 export function MainPanel() {
@@ -29,17 +30,9 @@ export function MainPanel() {
           )}
         </PanelGroup>
       )}
-      {currentView === 'settings' && <SettingsPlaceholder />}
+      {currentView === 'settings' && <SettingsPanel />}
       {currentView === 'mcp' && <McpManager />}
       {currentView === 'plugins' && <PluginMarketplace />}
-    </div>
-  );
-}
-
-function SettingsPlaceholder() {
-  return (
-    <div className="flex-1 flex items-center justify-center text-zinc-500">
-      <p className="text-lg">Settings — Coming in Phase 8</p>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core';
-import type { AuthStatus, CopilotStatus, SessionInfo, AppConfig, FileChangeEvent, DiffResult, McpServerConfig, ModelInfo, AgentMode, PluginInfo } from '@/types';
+import type { AuthStatus, CopilotStatus, SessionInfo, AppConfig, FileChangeEvent, DiffResult, McpServerConfig, ModelInfo, AgentMode, PluginInfo, UsageMetrics } from '@/types';
 
 export const tauriApi = {
   checkCopilotStatus: () => invoke<CopilotStatus>('check_copilot_status'),
@@ -86,4 +86,13 @@ export const tauriApi = {
 
   updatePlugin: (sessionId: string, name: string) =>
     invoke<void>('update_plugin', { sessionId, name }),
+
+  updateConfig: (config: AppConfig) =>
+    invoke<void>('update_config', { config }),
+
+  getUsageMetrics: (sessionId: string) =>
+    invoke<UsageMetrics>('get_usage_metrics', { sessionId }),
+
+  clearSessionHistory: (sessionId: string) =>
+    invoke<void>('clear_session_history', { sessionId }),
 };

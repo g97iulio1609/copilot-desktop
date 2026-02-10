@@ -3,16 +3,47 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { MainPanel } from '@/components/layout/MainPanel';
 import { LoginScreen } from '@/components/auth/LoginScreen';
 import { ProjectPicker } from '@/components/layout/ProjectPicker';
+import { CommandPalette } from '@/components/layout/CommandPalette';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useAuthStore } from '@/stores/authStore';
 import { useSessionStore } from '@/stores/sessionStore';
+import { useKeyboard } from '@/hooks/useKeyboard';
 import { tauriApi } from '@/lib/tauri';
-import { useEffect } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 export default function App() {
   const { setCopilotStatus } = useSettingsStore();
   const { status, isCheckingAuth, checkAuth } = useAuthStore();
   const activeSessionId = useSessionStore((s) => s.activeSessionId);
+  const addSession = useSessionStore((s) => s.addSession);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: 'k',
+        meta: true,
+        handler: () => setPaletteOpen((o) => !o),
+      },
+      {
+        key: 'n',
+        meta: true,
+        handler: () =>
+          addSession({
+            id: crypto.randomUUID(),
+            name: 'New Session',
+            working_dir: '~',
+            model: null,
+            mode: 'suggest' as const,
+            created_at: Date.now(),
+            is_active: true,
+          }),
+      },
+    ],
+    [addSession],
+  );
+
+  useKeyboard(shortcuts);
 
   useEffect(() => {
     tauriApi.checkCopilotStatus().then(setCopilotStatus).catch(console.error);
@@ -45,6 +76,7 @@ export default function App() {
         <Sidebar />
         <MainPanel />
       </div>
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }

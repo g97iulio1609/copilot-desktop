@@ -59,6 +59,9 @@ pub fn run() {
             commands::install_plugin,
             commands::uninstall_plugin,
             commands::update_plugin,
+            commands::update_config,
+            commands::get_usage_metrics,
+            commands::clear_session_history,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {

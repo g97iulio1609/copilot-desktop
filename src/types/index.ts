@@ -42,6 +42,27 @@ export interface AppConfig {
   default_model: string | null;
   theme: 'dark' | 'light';
   recent_projects: string[];
+  font_size: number;
+  font_family: string;
+  show_line_numbers: boolean;
+  auto_scroll: boolean;
+  send_on_enter: boolean;
+  notification_sound: boolean;
+  accent_color: string;
+}
+
+export interface UsageMetrics {
+  premium_requests_used: number;
+  premium_requests_limit: number | null;
+  session_messages: number;
+  session_tokens: number | null;
+  active_model: string;
+}
+
+export interface KeyboardShortcut {
+  key: string;
+  description: string;
+  category: string;
 }
 
 export type PtyEvent =

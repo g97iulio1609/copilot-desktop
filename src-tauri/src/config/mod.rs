@@ -7,7 +7,26 @@ pub struct AppConfig {
     pub default_model: Option<String>,
     pub theme: String,
     pub recent_projects: Vec<String>,
+    #[serde(default = "default_font_size")]
+    pub font_size: u16,
+    #[serde(default = "default_font_family")]
+    pub font_family: String,
+    #[serde(default = "default_true")]
+    pub show_line_numbers: bool,
+    #[serde(default = "default_true")]
+    pub auto_scroll: bool,
+    #[serde(default = "default_true")]
+    pub send_on_enter: bool,
+    #[serde(default)]
+    pub notification_sound: bool,
+    #[serde(default = "default_accent_color")]
+    pub accent_color: String,
 }
+
+fn default_font_size() -> u16 { 14 }
+fn default_font_family() -> String { "SF Mono".to_string() }
+fn default_true() -> bool { true }
+fn default_accent_color() -> String { "blue".to_string() }
 
 impl Default for AppConfig {
     fn default() -> Self {
@@ -16,8 +35,40 @@ impl Default for AppConfig {
             default_model: None,
             theme: "dark".to_string(),
             recent_projects: Vec::new(),
+            font_size: 14,
+            font_family: "SF Mono".to_string(),
+            show_line_numbers: true,
+            auto_scroll: true,
+            send_on_enter: true,
+            notification_sound: false,
+            accent_color: "blue".to_string(),
         }
     }
+}
+
+fn config_dir() -> std::path::PathBuf {
+    let home = dirs::home_dir().unwrap_or_else(|| std::path::PathBuf::from("."));
+    home.join(".copilot-desktop")
+}
+
+fn config_path() -> std::path::PathBuf {
+    config_dir().join("config.json")
+}
+
+pub fn load_config() -> AppConfig {
+    let path = config_path();
+    match std::fs::read_to_string(&path) {
+        Ok(data) => serde_json::from_str(&data).unwrap_or_default(),
+        Err(_) => AppConfig::default(),
+    }
+}
+
+pub fn save_config(config: &AppConfig) -> Result<(), std::io::Error> {
+    let dir = config_dir();
+    std::fs::create_dir_all(&dir)?;
+    let data = serde_json::to_string_pretty(config)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+    std::fs::write(config_path(), data)
 }
 
 pub struct ConfigManager {
@@ -27,7 +78,7 @@ pub struct ConfigManager {
 impl ConfigManager {
     pub fn new() -> Self {
         Self {
-            config: Mutex::new(AppConfig::default()),
+            config: Mutex::new(load_config()),
         }
     }
 
@@ -35,14 +86,23 @@ impl ConfigManager {
         self.config.lock().unwrap_or_else(|e| e.into_inner()).clone()
     }
 
+    pub fn update_config(&self, new_config: AppConfig) -> Result<(), std::io::Error> {
+        save_config(&new_config)?;
+        *self.config.lock().unwrap_or_else(|e| e.into_inner()) = new_config;
+        Ok(())
+    }
+
     pub fn add_recent_project(&self, path: &str) {
         let mut config = self.config.lock().unwrap_or_else(|e| e.into_inner());
         config.recent_projects.retain(|p| p != path);
         config.recent_projects.insert(0, path.to_string());
         config.recent_projects.truncate(10);
+        let _ = save_config(&config);
     }
 
     pub fn set_theme(&self, theme: &str) {
-        self.config.lock().unwrap_or_else(|e| e.into_inner()).theme = theme.to_string();
+        let mut config = self.config.lock().unwrap_or_else(|e| e.into_inner());
+        config.theme = theme.to_string();
+        let _ = save_config(&config);
     }
 }

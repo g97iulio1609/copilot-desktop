@@ -164,3 +164,19 @@ pub struct McpServerConfig {
     pub enabled: bool,
     pub status: Option<String>,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UsageMetrics {
+    pub premium_requests_used: u32,
+    pub premium_requests_limit: Option<u32>,
+    pub session_messages: u32,
+    pub session_tokens: Option<u64>,
+    pub active_model: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct KeyboardShortcut {
+    pub key: String,
+    pub description: String,
+    pub category: String,
+}
