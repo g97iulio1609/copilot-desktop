@@ -1,3 +1,9 @@
+export interface AuthStatus {
+  authenticated: boolean;
+  username: string | null;
+  email: string | null;
+}
+
 export interface CopilotMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -34,3 +40,36 @@ export type PtyEvent =
   | { type: 'Exit'; data: number };
 
 export type AppView = 'chat' | 'settings' | 'mcp' | 'plugins';
+
+export interface FileChangeEvent {
+  path: string;
+  kind: 'created' | 'modified' | 'deleted';
+  timestamp: number;
+}
+
+export interface FileNode {
+  name: string;
+  path: string;
+  is_dir: boolean;
+  children?: FileNode[];
+  change_kind?: 'created' | 'modified' | 'deleted';
+}
+
+export interface DiffResult {
+  path: string;
+  hunks: DiffHunk[];
+  additions: number;
+  deletions: number;
+}
+
+export interface DiffHunk {
+  header: string;
+  lines: DiffLine[];
+}
+
+export interface DiffLine {
+  content: string;
+  line_type: 'add' | 'remove' | 'context';
+  old_line: number | null;
+  new_line: number | null;
+}

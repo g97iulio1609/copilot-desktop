@@ -1,10 +1,13 @@
+mod auth;
 mod commands;
 mod config;
+mod files;
 mod pty;
 mod session;
 mod types;
 
 use config::ConfigManager;
+use files::FileWatcher;
 use pty::PtyManager;
 use session::SessionManager;
 
@@ -18,6 +21,7 @@ pub fn run() {
         .manage(PtyManager::new())
         .manage(SessionManager::new())
         .manage(ConfigManager::new())
+        .manage(FileWatcher::new())
         .invoke_handler(tauri::generate_handler![
             commands::check_copilot_status,
             commands::create_session,
@@ -28,6 +32,13 @@ pub fn run() {
             commands::get_config,
             commands::set_theme,
             commands::select_directory,
+            commands::check_auth,
+            commands::open_project,
+            commands::get_recent_projects,
+            commands::detect_copilot_binary,
+            commands::list_changed_files,
+            commands::read_file,
+            commands::get_diff,
         ])
         .setup(|app| {
             if cfg!(debug_assertions) {
